@@ -2,9 +2,22 @@ import mongoose from "mongoose";
 
 const reportSchema = new mongoose.Schema(
   {
+    patientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    doctorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     appointmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Appointment",
+      required: true,
     },
 
     diagnosis: {
@@ -15,19 +28,18 @@ const reportSchema = new mongoose.Schema(
     severity: {
       type: String,
       enum: [
-        "normal",
-        "mild",
-        "moderate",
-        "severe",
+        "No DR",
+        "Mild",
+        "Moderate",
+        "Severe",
+        "Proliferative",
       ],
+      required: true,
     },
 
-    prescription: {
+    recommendation: {
       type: String,
-    },
-
-    remarks: {
-      type: String,
+      required: true,
     },
   },
   {

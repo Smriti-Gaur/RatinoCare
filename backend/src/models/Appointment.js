@@ -10,8 +10,12 @@ const appointmentSchema = new mongoose.Schema(
 
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor",
+      ref: "User",
       required: true,
+    },
+    slotId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Slot",
     },
 
     appointmentDate: {
@@ -21,23 +25,19 @@ const appointmentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "pending",
-        "confirmed",
-        "completed",
-        "cancelled",
-      ],
+      enum: ["pending", "confirmed", "completed", "cancelled"],
       default: "pending",
+    },
+    reason: {
+      type: String,
+      default: "Diabetic Retinopathy Screening",
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Appointment = mongoose.model(
-  "Appointment",
-  appointmentSchema
-);
+const Appointment = mongoose.model("Appointment", appointmentSchema);
 
 export default Appointment;
