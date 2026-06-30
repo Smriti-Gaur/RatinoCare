@@ -11,7 +11,18 @@ import {
   getMyAppointments
 } from "../controllers/appointmentController.js";
 
+import {
+
+validateCreateAppointment,
+validateAppointmentId,
+validatePatientId,
+validateDoctorId,
+validateStatusUpdate,
+validateBookSlot,
+} from "../validators/appointmentValidator.js";
+
 import {verifyPatientOwnership , verifyDoctorOwnership }from "../middleware/ownershipMiddleware.js";
+
 
 import protect from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
@@ -19,13 +30,9 @@ import { authorize } from "../middleware/roleMiddleware.js";
 const router = express.Router();
 
 router.post(
-  "/book-slot",
-  bookSlotAppointment
-);
-
-router.post(
-  "/create",
-  createAppointment
+    "/create",
+    validateCreateAppointment,
+    createAppointment
 );
 router.get(
   "/",protect,
@@ -36,6 +43,7 @@ router.post(
     "/book-slot",
     protect,
     authorize("patient"),
+    validateBookSlot,
     bookSlotAppointment
 );
 
@@ -50,33 +58,42 @@ router.get(
     "/patient/:patientId",
     protect,
     authorize("patient","admin"),
+    validatePatientId,
     verifyPatientOwnership,
     getPatientAppointments
 );
 
 router.get(
-  "/doctor/:doctorId",
-  protect,
-  authorize("doctor", "admin"),
-  verifyDoctorOwnership,
-  getDoctorAppointments
+    "/doctor/:doctorId",
+    protect,
+    authorize("doctor","admin"),
+    validateDoctorId,
+    verifyDoctorOwnership,
+    getDoctorAppointments
 );
 
 
 
-router.get("/:id", getAppointmentById);
-
+router.get(
+    "/:id",
+    protect,
+    validateAppointmentId,
+    getAppointmentById
+);
 router.patch(
     "/:id/status",
     protect,
     authorize("doctor"),
+    validateAppointmentId,
+    validateStatusUpdate,
     updateAppointmentStatus
 );
 
 router.patch(
     "/:id/cancel",
     protect,
-    authorize("patient", "doctor"),
+    authorize("patient","doctor"),
+    validateAppointmentId,
     cancelAppointment
 );
 

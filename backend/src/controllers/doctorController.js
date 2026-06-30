@@ -1,30 +1,14 @@
-import User from "../models/User.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
-export const getAllDoctors = async (
-  req,
-  res
-) => {
-  try {
+import { getAllDoctorsService } from "../services/doctorService.js";
 
-    const doctors =
-      await User.find({
-        role: "doctor",
-      }).select(
-        "-password"
-      );
+export const getAllDoctors = asyncHandler(
+  async (req, res) => {
 
-    res.status(200).json({
-      success: true,
-      count: doctors.length,
-      doctors,
-    });
+    const data =
+      await getAllDoctorsService();
 
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(200).json(data);
 
   }
-};
+);

@@ -1,28 +1,25 @@
 const errorHandler = (
-  err,
-  req,
-  res,
-  next
-) => {
+    err,
+    req,
+    res,
+    next
+)=>{
 
-  const statusCode =
-    res.statusCode === 200
-      ? 500
-      : res.statusCode;
+    const statusCode =
+        err.statusCode || 500;
 
-  res.status(statusCode).json({
+    res.status(statusCode).json({
 
-    success: false,
+        success:false,
 
-    message: err.message,
+        message:err.message,
 
-    stack:
-      process.env.NODE_ENV ===
-      "production"
-        ? null
-        : err.stack,
+        stack:
+        process.env.NODE_ENV==="production"
+        ? undefined
+        : err.stack
 
-  });
+    });
 
 };
 

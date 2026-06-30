@@ -1,37 +1,37 @@
 import express from "express";
-import dotenv from "dotenv";
+
 import authRoutes from "./routes/authRoutes.js";
 import appointmentRoutes from "./routes/appointmentRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import slotRoutes from "./routes/slotRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
+
 import connectDB from "./config/db.js";
+import config from "./config/env.js";
+import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorMiddleware.js";
-
-
-dotenv.config();
+import logger from "./utils/logger.js";
 
 const app = express();
 
-// Connect Database
 connectDB();
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send(" DR Screening Backend Running");
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/reports", reportRoutes);
-
 app.use("/api/slots", slotRoutes);
 app.use("/api/doctors", doctorRoutes);
+app.use(notFound);
 app.use(errorHandler);
 
-app.get("/", (req, res) => {
-  res.send("Server Running");
-});
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server Running on Port ${PORT}`);
+app.listen(config.PORT, () => {
+  logger.info(
+  `Server running on port ${config.PORT}`
+);
 });

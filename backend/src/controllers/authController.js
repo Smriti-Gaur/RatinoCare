@@ -1,120 +1,51 @@
-import bcrypt from "bcryptjs";
-import User from "../models/User.js";
-import jwt from "jsonwebtoken";
+import {
+  registerUserService,
+  loginUserService,
+  getProfileService,
+} from "../services/authService.js";
 
-export const registerUser = async (req, res) => {
-  try {
-    const { name, email, password,role } = req.body;
+import asyncHandler from  "../utils/asyncHandler.js";
 
-    const existingUser = await User.findOne({ email });
+export const registerUser =
+asyncHandler(async(req,res)=>{
 
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-      });
-    }
+    await registerUserService(req.body);
 
-    const passwordRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return res.status(201).json(
 
-if (!passwordRegex.test(password)) {
-  return res.status(400).json({
-    success: false,
-    message:
-      "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character.",
-  });
-}
-    const hashedPassword = await bcrypt.hash(password, 10);
+        new ApiResponse(
+            201,
+            null,
+            "User Registered Successfully"
+        )
 
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-       role
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Credentials",
-      });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Credentials",
-      });
-    }
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
     );
 
-    res.status(200).json({
-      success: true,
-      message: "Login Successful",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+});
+export const loginUser = asyncHandler(
+  async (req, res) => {
 
-export const getProfile = async (req, res) => {
-  try {
+    const data = await loginUserService(req.body);
 
-    const user = await User.findById(req.user.id)
-      .select("-password");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      user,
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(200).json(data);
 
   }
-};
+);
+
+export const getProfile =
+asyncHandler(async(req,res)=>{
+
+    const data =
+    await getProfileService(req.user.id);
+
+    return res.status(200).json(
+
+        new ApiResponse(
+            200,
+            data.user,
+            "Profile fetched successfully"
+        )
+
+    );
+
+});
