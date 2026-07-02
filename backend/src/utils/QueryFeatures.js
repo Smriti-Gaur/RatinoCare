@@ -1,70 +1,144 @@
 class QueryFeatures {
-  constructor(query, queryString) {
-    this.query = query;
+  constructor(model, queryString) {
+    this.model = model;
     this.queryString = queryString;
+
+    this.filterQuery = {};
+
+    this.page = 1;
+    this.limit = 10;
+
+    this.sortBy = "-createdAt";
+
+    this.selectedFields = null;
   }
 
   filter() {
     const queryObj = { ...this.queryString };
 
-    const excludedFields = [
+    [
       "page",
       "limit",
       "sort",
       "search",
-    ];
+      "fields",
+    ].forEach((field) => delete queryObj[field]);
 
-    excludedFields.forEach(field => {
-      delete queryObj[field];
-    });
+    this.filterQuery = {
+      ...this.filterQuery,
+      ...queryObj,
+    };
 
-    this.query = this.query.find(queryObj);
+    return this;
+  }
+  addFilter(key, value) {
+
+  this.filterQuery[key] = value;
+
+  return this;
+
+}
+
+  search(searchFields = []) {
+    if (
+      this.queryString.search &&
+      searchFields.length
+    ) {
+      const keyword = this.queryString.search;
+
+      this.filterQuery.$or =
+        searchFields.map((field) => ({
+          [field]: {
+            $regex: keyword,
+            $options: "i",
+          },
+        }));
+    }
 
     return this;
   }
 
   sort() {
     if (this.queryString.sort) {
+      this.sortBy =
+        this.queryString.sort
+          .split(",")
+          .join(" ");
+    }
 
-      const sortBy =
-        this.queryString.sort.split(",").join(" ");
+    return this;
+  }
 
-      this.query = this.query.sort(sortBy);
-
-    } else {
-
-      this.query = this.query.sort("-createdAt");
-
+  selectFields() {
+    if (this.queryString.fields) {
+      this.selectedFields =
+        this.queryString.fields
+          .split(",")
+          .join(" ");
     }
 
     return this;
   }
 
   paginate() {
+    this.page = Math.max(
+      Number(this.queryString.page) || 1,
+      1
+    );
 
-    const page =
-      Number(this.queryString.page) || 1;
-
-    const limit =
-      Number(this.queryString.limit) || 10;
-
-    const skip =
-      (page - 1) * limit;
-
-    this.query = this.query
-      .skip(skip)
-      .limit(limit);
+    this.limit = Math.min(
+      Number(this.queryString.limit) || 10,
+      100
+    );
 
     return this;
-
   }
 
-  async execute() {
+  async execute(populateOptions = []) {
+    const skip =
+      (this.page - 1) * this.limit;
 
-    return await this.query;
+    let query = this.model
+      .find(this.filterQuery)
+      .sort(this.sortBy)
+      .skip(skip)
+      .limit(this.limit);
 
+    if (this.selectedFields) {
+      query = query.select(
+        this.selectedFields
+      );
+    }
+
+    populateOptions.forEach((option) => {
+      query = query.populate(option);
+    });
+
+    return await query;
   }
 
+  async paginateResult() {
+    const totalRecords =
+      await this.model.countDocuments(
+        this.filterQuery
+      );
+
+    const totalPages =
+      Math.ceil(
+        totalRecords / this.limit
+      );
+
+    return {
+      page: this.page,
+      limit: this.limit,
+      totalRecords,
+      totalPages,
+      hasNextPage:
+        this.page < totalPages,
+      hasPrevPage:
+        this.page > 1,
+    };
+  }
 }
 
 export default QueryFeatures;

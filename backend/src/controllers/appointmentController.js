@@ -35,7 +35,7 @@ export const getAllAppointments =
 asyncHandler(async(req,res)=>{
 
     const data =
-    await getAllAppointmentsService();
+await getAllAppointmentsService(req.query);
 
     res.status(200).json(data);
 
@@ -70,10 +70,10 @@ export const getPatientAppointments =
 asyncHandler(async(req,res)=>{
 
     const data =
-    await getPatientAppointmentsService(
-        req.params.patientId
-    );
-
+await getPatientAppointmentsService(
+    req.params.patientId,
+    req.query
+);
     res.status(200).json(data);
 
 });
@@ -118,10 +118,10 @@ asyncHandler(async(req,res)=>{
 export const getMyAppointments =
 asyncHandler(async(req,res)=>{
 
-    const data =
-    await getMyAppointmentsService(
-        req.user
-    );
+    const data = await getMyAppointmentsService(
+  req.user,
+  req.query
+);
 
     res.status(200).json(data);
 

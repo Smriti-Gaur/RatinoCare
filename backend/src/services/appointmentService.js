@@ -1,7 +1,8 @@
-import mongoose from "mongoose";
 import Appointment from "../models/Appointment.js";
 import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
+import QueryFeatures from "../utils/QueryFeatures.js";
+import Slot from "../models/Slot.js";
 
 export const createAppointmentService = async (
   appointmentData
@@ -81,40 +82,46 @@ export const createAppointmentService = async (
     });
 
   return {
-
-    success:true,
-
     appointment
 
   };
 
 };
 
-export const getAllAppointmentsService =
-async()=>{
+export const getAllAppointmentsService = async (
+  queryParams
+) => {
 
-    const appointments =
-    await Appointment.find()
+  const features = new QueryFeatures(
+    Appointment,
+    queryParams
+  )
+    .filter()
+    .search([]) // No searchable fields in Appointment yet
+    .sort()
+    .selectFields()
+    .paginate();
 
-    .populate(
-        "patientId",
-        "name email role"
-    )
+  const appointments = await features.execute([
+    {
+      path: "patientId",
+      select: "name email role",
+    },
+    {
+      path: "doctorId",
+      select: "name email role",
+    },
+    {
+      path: "slotId",
+    },
+  ]);
 
-    .populate(
-        "doctorId",
-        "name email role"
-    )
+  const pagination = await features.paginateResult();
 
-    .populate("slotId");
-
-    return{
-
-        success:true,
-
-        appointments
-
-    };
+  return {
+    appointments,
+    pagination,
+  };
 
 };
 
@@ -147,9 +154,6 @@ async(id)=>{
     }
 
     return{
-
-        success:true,
-
         appointment
 
     };
@@ -194,7 +198,6 @@ export const updateAppointmentStatusService = async (
   await appointment.save();
 
   return {
-    success: true,
     message: "Appointment status updated",
     appointment,
   };
@@ -251,7 +254,6 @@ export const cancelAppointmentService = async (
   }
 
   return {
-    success: true,
     message:
       "Appointment cancelled successfully",
     appointment,
@@ -324,13 +326,9 @@ export const bookSlotAppointmentService = async (
 
   const appointment =
     await Appointment.create({
-
       patientId,
-
       doctorId: slot.doctorId,
-
       slotId,
-
       appointmentDate: slot.date,
 
     });
@@ -340,16 +338,14 @@ export const bookSlotAppointmentService = async (
   await slot.save();
 
   return{
-
-    success:true,
-
     appointment
-
   };
 
 };
-export const getPatientAppointmentsService =
-async(patientId)=>{
+export const getPatientAppointmentsService = async (
+  patientId,
+  queryParams
+) => {
 
 
     const patient =
@@ -373,36 +369,43 @@ async(patientId)=>{
 
     }
 
-    const appointments =
-    await Appointment.find({
-        patientId
-    })
+const features = new QueryFeatures(
+  Appointment,
+  queryParams
+)
+  .filter()
+  .search([])
+  .sort()
+  .selectFields()
+  .paginate();
 
-    .populate(
-        "patientId",
-        "name email role"
-    )
+// Force patient filter
+features.addFilter(
+    "patientId",
+    patientId
+);
 
-    .populate(
-        "doctorId",
-        "name email role"
-    )
+const appointments = await features.execute([
+  {
+    path: "patientId",
+    select: "name email role",
+  },
+  {
+    path: "doctorId",
+    select: "name email role",
+  },
+  {
+    path: "slotId",
+  },
+]);
 
-    .populate("slotId")
+const pagination =
+  await features.paginateResult();
 
-    .sort({
-        appointmentDate:-1
-    });
-
-    return{
-
-        success:true,
-
-        count:appointments.length,
-
-        appointments
-
-    };
+return {
+  appointments,
+  pagination,
+};
 
 };
 export const getDoctorAppointmentsService =
@@ -430,92 +433,119 @@ async(doctorId)=>{
 
     }
 
-    const appointments =
-    await Appointment.find({
-        doctorId
-    })
+   const features = new QueryFeatures(
+    Appointment,
+    queryParams
+)
 
-    .populate(
-        "patientId",
-        "name email role"
-    )
+.filter()
 
-    .populate(
-        "doctorId",
-        "name email role"
-    )
+.addFilter(
+    "doctorId",
+    doctorId
+)
 
-    .populate("slotId")
+.search([])
 
-    .sort({
-        appointmentDate:1
-    });
+.sort()
 
-    return{
+.selectFields()
 
-        success:true,
+.paginate();
 
-        count:appointments.length,
+const appointments =
+await features.execute([
+    {
+        path:"patientId",
+        select:"name email role"
+    },
+    {
+        path:"doctorId",
+        select:"name email role"
+    },
+    {
+        path:"slotId"
+    }
+]);
 
-        appointments
+const pagination =
+await features.paginateResult();
 
-    };
+return{
+
+    appointments,
+
+    pagination
 
 };
 
-export const getMyAppointmentsService =
-async(user)=>{
+};
 
-    let query={};
+export const getMyAppointmentsService = async (
+  user,
+  queryParams
+) => {
 
-    if(user.role==="patient"){
+  const features = new QueryFeatures(
+    Appointment,
+    queryParams
+  )
+    .filter();
 
-        query.patientId=user.id;
+  // Apply role-based filter
+  if (user.role === "patient") {
 
-    }
+    features.addFilter(
+      "patientId",
+      user.id
+    );
 
-    else if(user.role==="doctor"){
+  }
 
-        query.doctorId=user.id;
+  else if (user.role === "doctor") {
 
-    }
+    features.addFilter(
+      "doctorId",
+      user.id
+    );
 
-    else{
+  }
 
-        throw new ApiError(
-            403,
-            "Invalid role"
-        );
+  else {
 
-    }
+    throw new ApiError(
+      403,
+      "Invalid role"
+    );
 
-    const appointments =
-    await Appointment.find(query)
+  }
 
-    .populate(
-        "patientId",
-        "name email role"
-    )
+  features
+    .search([]) // No searchable Appointment fields yet
+    .sort()
+    .selectFields()
+    .paginate();
 
-    .populate(
-        "doctorId",
-        "name email role"
-    )
+  const appointments = await features.execute([
+    {
+      path: "patientId",
+      select: "name email role",
+    },
+    {
+      path: "doctorId",
+      select: "name email role",
+    },
+    {
+      path: "slotId",
+    },
+  ]);
 
-    .populate("slotId")
+  const pagination =
+    await features.paginateResult();
 
-    .sort({
-        appointmentDate:-1
-    });
-
-    return{
-
-        success:true,
-
-        count:appointments.length,
-
-        appointments
-
-    };
+  return {
+    appointments,
+    pagination,
+  };
 
 };
