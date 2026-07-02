@@ -5,6 +5,7 @@ import appointmentRoutes from "./routes/appointmentRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import slotRoutes from "./routes/slotRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 import connectDB from "./config/db.js";
 import config from "./config/env.js";
@@ -27,6 +28,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/slots", slotRoutes);
 app.use("/api/doctors", doctorRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

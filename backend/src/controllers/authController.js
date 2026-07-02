@@ -3,7 +3,7 @@ import {
   loginUserService,
   getProfileService,
 } from "../services/authService.js";
-
+import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from  "../utils/asyncHandler.js";
 
 export const registerUser =
