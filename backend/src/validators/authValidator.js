@@ -70,6 +70,19 @@ export const validateRegister = (
     );
   }
 
+  // Doctor Specific Credential Validation
+  if (role === "doctor") {
+    const { medicalLicenseNumber, specialization } = req.body;
+    if (!medicalLicenseNumber || !specialization) {
+      return next(
+        new ApiError(
+          400,
+          "Medical License Number and Specialization are required for Doctor registration"
+        )
+      );
+    }
+  }
+
   next();
 
 };

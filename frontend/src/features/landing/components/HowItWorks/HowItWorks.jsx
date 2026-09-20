@@ -1,7 +1,7 @@
 import {
-  Upload,
-  BrainCircuit,
-  Activity,
+  UserPlus,
+  Search,
+  CalendarCheck,
   Stethoscope,
   FileCheck2,
 } from "lucide-react";
@@ -10,38 +10,38 @@ import { motion } from "framer-motion";
 const steps = [
   {
     number: "01",
-    icon: Upload,
-    title: "Upload a retinal image",
+    icon: UserPlus,
+    title: "Create an Account",
     description:
-      "A retinal image is securely submitted through the screening workflow.",
+      "Register as a patient to manage your screening appointments and health profile.",
   },
   {
     number: "02",
-    icon: BrainCircuit,
-    title: "AI-assisted analysis",
+    icon: Search,
+    title: "Explore Doctors",
     description:
-      "The platform processes the image and looks for screening-relevant patterns.",
+      "Find eye care specialists and screening services tailored to diabetic retinopathy.",
   },
   {
     number: "03",
-    icon: Activity,
-    title: "Receive screening insights",
+    icon: CalendarCheck,
+    title: "Book Available Slot",
     description:
-      "Potential findings and screening indicators are presented in an understandable format.",
+      "Select a convenient date and time slot with your chosen healthcare specialist.",
   },
   {
     number: "04",
     icon: Stethoscope,
-    title: "Clinical review",
+    title: "Screening Consultation",
     description:
-      "Healthcare professionals can review the screening information and patient context.",
+      "Attend your appointment for retinal screening and professional examination.",
   },
   {
     number: "05",
     icon: FileCheck2,
-    title: "Report & follow-up",
+    title: "Reports & AI Insights",
     description:
-      "Results can be organized into reports to support documentation and follow-up care.",
+      "Access structured reports, track longitudinal trends, and review doctor feedback.",
   },
 ];
 
@@ -77,9 +77,9 @@ const HowItWorks = () => {
             transition={{ delay: 0.05 }}
             className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl"
           >
-            From retinal image to
+            A simple digital workflow for
             <span className="block text-blue-600">
-              actionable screening insights.
+              retinal screening appointments.
             </span>
           </motion.h2>
 
@@ -90,9 +90,8 @@ const HowItWorks = () => {
             transition={{ delay: 0.1 }}
             className="mt-5 text-base leading-7 text-slate-600 sm:text-lg"
           >
-            RatinoCare simplifies the screening workflow while
-            keeping healthcare professionals at the center of
-            clinical decision-making.
+            RatinoCare connects patients with doctors, streamlines screening
+            appointments, and delivers clear report history and AI-assisted insights.
           </motion.p>
         </div>
 

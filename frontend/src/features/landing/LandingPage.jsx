@@ -5,7 +5,7 @@ import Hero from "./components/Hero/Hero";
 import TrustedBy from "./components/TrustedBy/TrustedBy";
 import Features from "./components/Features/Features";
 import HowItWorks from "./components/HowItWorks/HowItWorks";
-import AIDetection from "./components/AIDetection/AIDetection";
+import AIInsights from "./components/AIInsights/AIInsights";
 import WhyChooseUs from "./components/WhyChooseUs/WhyChooseUs";
 import Statistics from "./components/Statistics/Statistics";
 import UserPerspectives from "./components/UserPerspectives/UserPerspectives";
@@ -16,13 +16,18 @@ import Footer from "./components/Footer/Footer";
 import IntroAnimation from "./components/IntroAnimation/IntroAnimation";
 
 const LandingPage = () => {
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => {
+    const hasSeenIntro = sessionStorage.getItem("ratinocare_has_seen_intro");
+    return !hasSeenIntro;
+  });
 
   const handleComplete = () => {
+    sessionStorage.setItem("ratinocare_has_seen_intro", "true");
     setShowIntro(false);
   };
 
   const handleSkip = () => {
+    sessionStorage.setItem("ratinocare_has_seen_intro", "true");
     setShowIntro(false);
   };
 
@@ -48,7 +53,7 @@ const LandingPage = () => {
 
          <HowItWorks />
 
-        <AIDetection />
+        <AIInsights />
 
         <WhyChooseUs />
 

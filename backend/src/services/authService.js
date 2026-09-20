@@ -1,33 +1,57 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Doctor from "../models/Doctor.js";
 import ApiError from "../utils/ApiError.js";
 import config from "../config/env.js";
+
 export const registerUserService = async (userData) => {
-  const { name, email, password, role } = userData;
+  const {
+    name,
+    email,
+    password,
+    role,
+    medicalLicenseNumber,
+    specialization,
+  } = userData;
 
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
     throw new ApiError(
-400,
-"User already exists"
-);
+      400,
+      "User already exists"
+    );
   }
 
-
   const hashedPassword = await bcrypt.hash(password, 10);
+  const isApproved = role === "doctor" ? false : true;
 
-  await User.create({
+  const user = await User.create({
     name,
     email,
     password: hashedPassword,
     role,
+    medicalLicenseNumber: role === "doctor" ? medicalLicenseNumber : "",
+    specialization: role === "doctor" ? specialization : "",
+    isApproved,
   });
+
+  if (role === "doctor") {
+    await Doctor.create({
+      userId: user._id,
+      specialization: specialization || "General Ophthalmology",
+      medicalLicenseNumber: medicalLicenseNumber || "PENDING",
+      isApproved: false,
+    });
+  }
 
   return {
     success: true,
-    message: "User registered successfully",
+    message:
+      role === "doctor"
+        ? "Doctor account submitted successfully! Pending administrative credential verification."
+        : "User registered successfully",
   };
 };
 

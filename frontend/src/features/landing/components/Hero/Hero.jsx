@@ -1,19 +1,19 @@
-import { ArrowRight, BrainCircuit, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, Calendar, Stethoscope, ShieldCheck, BrainCircuit } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const trustPoints = [
   {
-    icon: BrainCircuit,
-    label: "AI-assisted screening",
+    icon: Calendar,
+    label: "Easy Slot Booking",
   },
   {
-    icon: Zap,
-    label: "Fast analysis",
+    icon: Stethoscope,
+    label: "Doctor Consultations",
   },
   {
     icon: ShieldCheck,
-    label: "Secure platform",
+    label: "Secure Records & AI",
   },
 ];
 
@@ -52,23 +52,22 @@ const Hero = () => {
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600" />
               </span>
 
-              AI-POWERED RETINAL SCREENING
+              DIABETES RETINOPATHY SCREENING SYSTEM
             </div>
 
             {/* Heading */}
             <h1 className="text-balance text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl xl:text-7xl">
-              Detect earlier.
+              Streamline Retinal Screening
               <span className="block text-blue-600">
-                Care smarter.
+                & Appointments.
               </span>
             </h1>
 
             {/* Description */}
             <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-              RatinoCare helps transform retinal images into
-              intelligent screening insights, supporting
-              healthcare professionals in identifying signs of
-              diabetic retinopathy earlier.
+              RatinoCare connects patients with doctors, simplifies screening
+              appointment booking, and manages clinical workflows — with
+              additional AI-assisted report insights.
             </p>
 
             {/* CTA */}
@@ -77,7 +76,7 @@ const Hero = () => {
                 to="/register"
                 className="group inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/25 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
               >
-                Start Screening
+                Book Screening Appointment
 
                 <ArrowRight
                   size={17}

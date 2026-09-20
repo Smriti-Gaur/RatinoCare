@@ -13,12 +13,24 @@ const doctorSchema = new mongoose.Schema(
       required: true,
     },
 
+    medicalLicenseNumber: {
+      type: String,
+      required: true,
+    },
+
     qualification: {
       type: String,
+      default: "",
     },
 
     experience: {
       type: Number,
+      default: 0,
+    },
+
+    isApproved: {
+      type: Boolean,
+      default: false,
     },
   },
   {

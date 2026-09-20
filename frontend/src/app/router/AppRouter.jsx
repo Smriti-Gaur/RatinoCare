@@ -6,6 +6,9 @@ import {
 } from "react-router-dom";
 
 import LandingPage from "../../features/landing/LandingPage";
+import LoginPage from "../../pages/auth/LoginPage";
+import RegisterPage from "../../pages/auth/RegisterPage";
+import ProtectedRoute from "../../components/auth/ProtectedRoute";
 
 const AppRouter = () => {
   return (
@@ -16,59 +19,60 @@ const AppRouter = () => {
             Public Routes
         ========================= */}
 
-       <Route
-  path="/"
-  element={<LandingPage />}
-/>
+        <Route
+          path="/"
+          element={<LandingPage />}
+        />
 
         <Route
           path="/login"
-          element={<div>Login</div>}
+          element={<LoginPage />}
         />
 
         <Route
           path="/register"
-          element={<div>Register</div>}
+          element={<RegisterPage />}
         />
 
         {/* =========================
             Protected Application Routes
         ========================= */}
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path="/dashboard"
+            element={<div>Dashboard</div>}
+          />
 
-        <Route
-          path="/dashboard"
-          element={<div>Dashboard</div>}
-        />
+          <Route
+            path="/appointments"
+            element={<div>Appointments</div>}
+          />
 
-        <Route
-          path="/appointments"
-          element={<div>Appointments</div>}
-        />
+          <Route
+            path="/doctors"
+            element={<div>Doctors</div>}
+          />
 
-        <Route
-          path="/doctors"
-          element={<div>Doctors</div>}
-        />
+          <Route
+            path="/reports"
+            element={<div>Reports</div>}
+          />
 
-        <Route
-          path="/reports"
-          element={<div>Reports</div>}
-        />
+          <Route
+            path="/slots"
+            element={<div>Slots</div>}
+          />
 
-        <Route
-          path="/slots"
-          element={<div>Slots</div>}
-        />
+          <Route
+            path="/report-analysis"
+            element={<div>Report Analysis</div>}
+          />
 
-        <Route
-          path="/ai-screening"
-          element={<div>AI Screening</div>}
-        />
-
-        <Route
-          path="/profile"
-          element={<div>Profile</div>}
-        />
+          <Route
+            path="/profile"
+            element={<div>Profile</div>}
+          />
+        </Route>
 
         {/* =========================
             Fallback
