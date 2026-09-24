@@ -9,6 +9,11 @@ import LandingPage from "../../features/landing/LandingPage";
 import LoginPage from "../../pages/auth/LoginPage";
 import RegisterPage from "../../pages/auth/RegisterPage";
 import ProtectedRoute from "../../components/auth/ProtectedRoute";
+import DashboardPage from "../../features/dashboard/DashboardPage";
+import DoctorsPage from "../../features/doctors/DoctorsPage";
+import AppointmentPage from "../../features/appointments/AppointmentPage";
+import SlotsPage from "../../features/slots/SlotsPage";
+import ReportsPage from "../../features/reports/ReportsPage";
 
 const AppRouter = () => {
   return (
@@ -40,27 +45,27 @@ const AppRouter = () => {
         <Route element={<ProtectedRoute />}>
           <Route
             path="/dashboard"
-            element={<div>Dashboard</div>}
+            element={<DashboardPage />}
           />
 
           <Route
             path="/appointments"
-            element={<div>Appointments</div>}
+            element={<AppointmentPage />}
           />
 
           <Route
             path="/doctors"
-            element={<div>Doctors</div>}
+            element={<DoctorsPage />}
           />
 
           <Route
             path="/reports"
-            element={<div>Reports</div>}
+            element={<ReportsPage />}
           />
 
           <Route
             path="/slots"
-            element={<div>Slots</div>}
+              element={<SlotsPage />}
           />
 
           <Route

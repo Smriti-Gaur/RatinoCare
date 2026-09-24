@@ -1,4 +1,4 @@
-import { useSelector } from "react";
+import { useSelector } from "react-redux";
 import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { Stethoscope } from "lucide-react";
 

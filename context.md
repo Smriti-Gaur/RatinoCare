@@ -982,6 +982,8 @@ Known completed areas include:
 -   Authentication behavior
 -   Duplicate registration handling
 -   Appointment APIs
+-   Slot APIs
+-   Screening report APIs
 -   Role authorization
 
 The backend root currently returns:
@@ -992,6 +994,30 @@ DR Screening Backend Running
 
 There is no `/api/health` endpoint unless it is added intentionally
 later.
+
+## Current Frontend Implementation Status
+
+Completed application features:
+
+-   Landing page
+-   Authentication and protected routes
+-   Patient, doctor, and admin dashboards
+-   Doctor directory
+-   Appointment history and management
+-   Slot management and slot booking
+-   Screening report MVP
+
+The screening report MVP currently supports:
+
+-   Doctors creating reports for completed appointments
+-   Patient report history
+-   Doctor report history
+-   Admin report lookup by patient or doctor ID
+-   Diagnosis, severity, recommendation, and appointment linkage
+-   Loading, error, empty, and success states
+
+The report MVP does not yet include uploaded PDF reports, AI extraction,
+longitudinal comparison, automated review flags, or doctor-review queues.
 
 ------------------------------------------------------------------------
 
@@ -1020,17 +1046,19 @@ The project should be developed in this order:
       ↓
 10. Appointment History / Management
       ↓
-11. Reports
+11. Reports MVP (completed)
       ↓
-12. AI-Assisted Report Analysis
+12. Report Upload and Storage
       ↓
-13. Longitudinal Report Comparison
+13. AI-Assisted Report Analysis
       ↓
-14. Rule-Based Doctor Review Flags
+14. Longitudinal Report Comparison
       ↓
-15. Doctor Review Workflow
+15. Rule-Based Doctor Review Flags
       ↓
-16. Final Testing / Security / Deployment
+16. Doctor Review Workflow
+      ↓
+17. Final Testing / Security / Deployment
 ```
 
 The AI feature is intentionally placed **after the core appointment and
@@ -1482,8 +1510,8 @@ Priority order:
 3. Login Page UI & Authentication (COMPLETED)
 4. Register Page UI (Patient & Doctor) (COMPLETED)
 5. Protected Routing & Auth Guard (COMPLETED)
-6. Shared Dashboard Layout & Role-Based Views (IN PROGRESS / NEXT)
-7. Doctors
+6. Shared Dashboard Layout & Role-Based Dashboards (Patient, Doctor, Admin) (COMPLETED)
+7. Doctors (COMPLETED)
 8. Appointments
 9. Slots
 10. Reports
@@ -1491,6 +1519,128 @@ Priority order:
 12. Longitudinal monitoring
 13. Doctor review workflow
 ```
+
+------------------------------------------------------------------------
+
+# 39A. Dashboard Implementation Status
+
+The shared dashboard foundation and the first Patient dashboard slice are
+implemented in the frontend.
+
+Completed dashboard foundation:
+
+-   Responsive protected dashboard shell with desktop sidebar and mobile
+      navigation
+-   Shared RatinoCare branding and account controls
+-   Profile navigation and logout behavior
+-   Role-ready navigation structure for future Doctor and Admin views
+
+Completed Patient dashboard:
+
+-   Uses the existing `GET /api/dashboard/patient` endpoint
+-   Displays appointment totals, pending, confirmed, and completed counts
+-   Displays the next appointment when available
+-   Displays the latest screening report when available
+-   Handles loading, API error, retry, and empty states
+-   Preserves the existing landing-page color and typography direction
+
+No backend changes were required for this dashboard slice. The Admin
+dashboard is the next dashboard subtask.
+
+Completed Doctor dashboard:
+
+-   Uses the existing protected `GET /api/dashboard/doctor` endpoint
+-   Displays today&apos;s appointments, pending requests, confirmed
+      appointments, and created reports
+-   Displays available and booked slot counts
+-   Provides doctor workflow shortcuts for appointments, slots, and reports
+-   Reuses the shared dashboard layout with doctor-specific navigation
+-   Selects the Patient or Doctor dashboard API from the authenticated user
+      role
+
+Completed Admin dashboard:
+
+-   Uses the existing protected `GET /api/dashboard/admin` endpoint
+-   Displays registered doctor and patient counts
+-   Displays total appointments, reports, appointment status counts, and slot
+      utilization
+-   Provides admin navigation for appointments, doctors, and slots
+-   Reuses the shared dashboard layout with admin-specific navigation
+-   Renders only the dashboard matching the authenticated user role
+
+Validation completed for this slice:
+
+-   Frontend lint passes with zero errors; one existing Fast Refresh warning
+      remains in `src/components/ui/button.jsx`
+-   Frontend production build succeeds
+-   Unauthenticated `/dashboard` navigation correctly redirects to `/login`
+-   Landing page renders after the dashboard integration
+-   A pre-existing `ProtectedRoute` import error was fixed by importing
+      `useSelector` from `react-redux`
+-   The backend was subsequently verified as running on
+      `http://localhost:5000`, and `/api/health` returned a successful health
+      response
+-   Browser API access works when the frontend is opened at
+      `http://localhost:5173`, matching the backend CORS configuration
+-   Authenticated dashboard data still requires a valid patient login session;
+      no patient token was present in the browser during verification
+-   Live Patient dashboard verification completed with the available `Johny`
+      patient session; empty appointment and report states rendered correctly
+-   Doctor and Admin browser rendering still require matching authenticated
+      role sessions; their APIs are protected and return `401` without tokens
+
+------------------------------------------------------------------------
+
+# 39B. Doctors Feature Status
+
+The protected frontend `/doctors` route now uses the existing
+`GET /api/doctors/` endpoint.
+
+Completed Doctors feature:
+
+-   Responsive doctor directory inside the shared dashboard layout
+-   Displays only fields provided by the backend User records
+-   Shows doctor name, specialization, email, and approval status
+-   Client-side search by name, specialization, or email
+-   Handles loading, request errors, no-doctor results, and no-search-match
+      states
+-   Preserves the RatinoCare dashboard visual language
+-   Does not invent availability, qualifications, experience, or medical
+      claims that the current API does not provide
+
+Validation completed:
+
+-   Frontend lint passes with zero new errors
+-   Frontend production build succeeds
+-   Live `GET /api/doctors/` returned one doctor record successfully
+-   Browser displayed the live doctor card and approval state
+-   Search empty state was verified with a non-matching query
+
+------------------------------------------------------------------------
+
+# 39C. Appointments Feature Status
+
+The protected frontend `/appointments` route now uses the real
+`GET /api/appointments/my-appointments`, `PATCH /api/appointments/:id/status`,
+and `PATCH /api/appointments/:id/cancel` backend flows.
+
+Completed Appointments feature:
+
+-   Shared dashboard page for the authenticated user role
+-   Uses the backend-provided my-appointments list for patients and doctors
+-   Displays appointment status, date, time window, reason, and participant details
+-   Supports doctor status transitions from pending to confirmed/completed and cancellation paths
+-   Supports patient cancellation while the appointment is still active
+-   Includes loading, request-error, and empty states
+-   Preserves the existing RatinoCare dashboard styling and navigation structure
+-   Avoids inventing non-existent appointment fields or endpoints
+
+Validation completed:
+
+-   Frontend production build succeeds
+-   Appointments route is protected behind the shared auth guard
+-   Browser access to `/appointments` redirects to `/login` without a valid token
+-   The page is wired to the existing backend appointment contract rather than a placeholder UI
 
 ------------------------------------------------------------------------
 

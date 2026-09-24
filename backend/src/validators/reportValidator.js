@@ -61,16 +61,15 @@ export const validateCreateReport = (
 
   // Severity Validation
   const allowedSeverity = [
-    "mild",
-    "moderate",
-    "severe",
-    "proliferative",
+    "No DR",
+    "Mild",
+    "Moderate",
+    "Severe",
+    "Proliferative",
   ];
 
   if (
-    !allowedSeverity.includes(
-      severity.toLowerCase()
-    )
+    !allowedSeverity.includes(severity)
   ) {
     return next(
       new ApiError(
