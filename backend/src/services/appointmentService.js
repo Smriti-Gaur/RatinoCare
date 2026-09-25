@@ -5,14 +5,16 @@ import QueryFeatures from "../utils/QueryFeatures.js";
 import Slot from "../models/Slot.js";
 
 export const createAppointmentService = async (
+  user,
   appointmentData
 ) => {
 
   const {
-    patientId,
     doctorId,
     appointmentDate,
   } = appointmentData;
+
+  const patientId = user.id;
 
   
 
@@ -126,7 +128,7 @@ export const getAllAppointmentsService = async (
 };
 
 export const getAppointmentByIdService =
-async(id)=>{
+async(id, user)=>{
 
 
     const appointment =
@@ -153,6 +155,13 @@ async(id)=>{
 
     }
 
+    const isOwner = [appointment.patientId._id, appointment.doctorId._id]
+      .some((ownerId) => ownerId.toString() === user.id);
+
+    if (user.role !== "admin" && !isOwner) {
+      throw new ApiError(403, "Access denied");
+    }
+
     return{
         appointment
 
@@ -162,7 +171,8 @@ async(id)=>{
 
 export const updateAppointmentStatusService = async (
   id,
-  status
+  status,
+  user
 ) => {
 
   const appointment =
@@ -173,6 +183,10 @@ export const updateAppointmentStatusService = async (
       404,
       "Appointment not found"
     );
+  }
+
+  if (user.role !== "admin" && appointment.doctorId.toString() !== user.id) {
+    throw new ApiError(403, "You can update only your own appointments");
   }
 
   const validTransitions = {
@@ -205,7 +219,8 @@ export const updateAppointmentStatusService = async (
 };
 
 export const cancelAppointmentService = async (
-  id
+  id,
+  user
 ) => {
 
   const appointment =
@@ -216,6 +231,13 @@ export const cancelAppointmentService = async (
       404,
       "Appointment not found"
     );
+  }
+
+  const isOwner = [appointment.patientId, appointment.doctorId]
+    .some((ownerId) => ownerId.toString() === user.id);
+
+  if (user.role !== "admin" && !isOwner) {
+    throw new ApiError(403, "You can cancel only your own appointments");
   }
 
   if (appointment.status === "completed") {
@@ -416,7 +438,7 @@ return {
 
 };
 export const getDoctorAppointmentsService =
-async(doctorId)=>{
+async(doctorId, queryParams = {})=>{
 
 
     const doctor =
@@ -516,6 +538,10 @@ export const getMyAppointmentsService = async (
       user.id
     );
 
+  }
+
+  else if (user.role !== "admin") {
+    throw new ApiError(403, "Invalid role");
   }
 
   else {

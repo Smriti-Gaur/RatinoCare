@@ -14,6 +14,8 @@ import DoctorsPage from "../../features/doctors/DoctorsPage";
 import AppointmentPage from "../../features/appointments/AppointmentPage";
 import SlotsPage from "../../features/slots/SlotsPage";
 import ReportsPage from "../../features/reports/ReportsPage";
+import ProfilePage from "../../features/profile/ProfilePage";
+import ReportAssistantPage from "../../features/reportAssistant/ReportAssistantPage";
 
 const AppRouter = () => {
   return (
@@ -70,12 +72,12 @@ const AppRouter = () => {
 
           <Route
             path="/report-analysis"
-            element={<div>Report Analysis</div>}
+            element={<ReportAssistantPage />}
           />
 
           <Route
             path="/profile"
-            element={<div>Profile</div>}
+            element={<ProfilePage />}
           />
         </Route>
 

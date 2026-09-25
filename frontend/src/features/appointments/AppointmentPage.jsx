@@ -65,10 +65,7 @@ const AppointmentPage = () => {
   };
 
   useEffect(() => {
-    if (!user?.role) {
-      setLoading(false);
-      return undefined;
-    }
+    if (!user?.role) return undefined;
 
     let isMounted = true;
 

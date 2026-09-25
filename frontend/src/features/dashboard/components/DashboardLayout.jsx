@@ -2,6 +2,7 @@ import {
   CalendarDays,
   ClipboardPlus,
   FileText,
+  MessageCircleQuestion,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -19,6 +20,7 @@ const navigationItems = [
   { label: "Book Appointment", to: "/doctors", icon: Stethoscope },
   { label: "Appointments", to: "/appointments", icon: CalendarDays },
   { label: "Reports", to: "/reports", icon: FileText },
+  { label: "AI Report Assistant", to: "/report-analysis", icon: MessageCircleQuestion },
 ];
 
 const doctorNavigationItems = [
@@ -33,6 +35,7 @@ const adminNavigationItems = [
   { label: "Appointments", to: "/appointments", icon: CalendarDays },
   { label: "Doctors", to: "/doctors", icon: Stethoscope },
   { label: "Slots", to: "/slots", icon: ClipboardPlus },
+  { label: "Reports", to: "/reports", icon: FileText },
 ];
 
 const DashboardLayout = ({ children }) => {

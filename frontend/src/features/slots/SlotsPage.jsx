@@ -123,29 +123,22 @@ const SlotsPage = () => {
   };
 
   useEffect(() => {
-    if (!user?.role) {
-      setLoading(false);
-      return undefined;
-    }
+    if (!user?.role) return undefined;
 
-    if (isDoctor) {
-      loadDoctorSlots();
-      return undefined;
-    }
+    const requestId = window.setTimeout(() => {
+      if (isDoctor) {
+        loadDoctorSlots();
+      } else if (isPatient) {
+        loadPatientSlots();
+      } else if (isAdmin) {
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
+    }, 0);
 
-    if (isPatient) {
-      loadPatientSlots();
-      return undefined;
-    }
-
-    if (isAdmin) {
-      setLoading(false);
-      return undefined;
-    }
-
-    setLoading(false);
-    return undefined;
-  }, [user?.role]);
+    return () => window.clearTimeout(requestId);
+  }, [isAdmin, isDoctor, isPatient, user?.role]);
 
   const handleCreateSlot = async (event) => {
     event.preventDefault();

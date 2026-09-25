@@ -24,7 +24,8 @@ asyncHandler(async(req,res)=>{
 
     const data =
     await createAppointmentService(
-        req.body
+      req.user,
+      req.body
     );
 
     res.status(201).json(data);
@@ -46,7 +47,8 @@ asyncHandler(async(req,res)=>{
 
     const data =
     await getAppointmentByIdService(
-        req.params.id
+      req.params.id,
+      req.user
     );
 
     res.status(200).json(data);
@@ -59,7 +61,8 @@ asyncHandler(async (req, res) => {
   const data =
     await updateAppointmentStatusService(
       req.params.id,
-      req.body.status
+      req.body.status,
+      req.user
     );
 
   res.status(200).json(data);
@@ -83,7 +86,8 @@ asyncHandler(async(req,res)=>{
 
     const data =
     await getDoctorAppointmentsService(
-        req.params.doctorId
+      req.params.doctorId,
+      req.query
     );
 
     res.status(200).json(data);
@@ -95,7 +99,8 @@ asyncHandler(async (req, res) => {
 
   const data =
     await cancelAppointmentService(
-      req.params.id
+      req.params.id,
+      req.user
     );
 
   res.status(200).json(data);

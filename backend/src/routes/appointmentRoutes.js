@@ -31,12 +31,15 @@ const router = express.Router();
 
 router.post(
     "/create",
+        protect,
+        authorize("patient"),
     validateCreateAppointment,
     createAppointment
 );
 router.get(
   "/",protect,
-  getAllAppointments
+    authorize("admin"),
+    getAllAppointments
 );
 
 router.post(
@@ -50,7 +53,7 @@ router.post(
 router.get(
   "/my-appointments",
   protect,
-  authorize("patient", "doctor"),
+    authorize("patient", "doctor", "admin"),
   getMyAppointments
 );
 

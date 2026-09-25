@@ -14,14 +14,31 @@ const protect = (req, res, next) => {
     }
 
     // Extract the token after "Bearer "
-    const token = authHeader.split(" ")[1];
+    const [scheme, token] = authHeader.split(" ");
+
+    if (scheme !== "Bearer" || !token) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authorization header",
+      });
+    }
 
     const decoded = jwt.verify(
       token,
       config.JWT_SECRET
     );
 
-    req.user = decoded;
+    if (!decoded.id || !decoded.role) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Token",
+      });
+    }
+
+    req.user = {
+      id: decoded.id.toString(),
+      role: decoded.role,
+    };
 
     next();
 
