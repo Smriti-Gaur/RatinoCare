@@ -16,7 +16,7 @@ import { logout } from "../../../store/slices/authSlice";
 
 const navigationItems = [
   { label: "Overview", to: "/dashboard", icon: LayoutDashboard },
-  { label: "Find a doctor", to: "/doctors", icon: Stethoscope },
+  { label: "Book Appointment", to: "/doctors", icon: Stethoscope },
   { label: "Appointments", to: "/appointments", icon: CalendarDays },
   { label: "Reports", to: "/reports", icon: FileText },
 ];

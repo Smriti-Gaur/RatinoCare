@@ -304,13 +304,6 @@ export const bookSlotAppointmentService = async (
     );
   }
 
-  if(slot.isBooked){
-    throw new ApiError(
-      400,
-      "Slot already booked"
-    );
-  }
-
   const existingAppointment =
     await Appointment.findOne({
       patientId,
@@ -324,18 +317,32 @@ export const bookSlotAppointmentService = async (
     );
   }
 
-  const appointment =
-    await Appointment.create({
+  const reservedSlot = await Slot.findOneAndUpdate(
+    { _id: slotId, isBooked: false },
+    { $set: { isBooked: true } },
+    { new: true },
+  );
+
+  if (!reservedSlot) {
+    throw new ApiError(400, "Slot already booked");
+  }
+
+  let appointment;
+
+  try {
+    appointment = await Appointment.create({
       patientId,
-      doctorId: slot.doctorId,
+      doctorId: reservedSlot.doctorId,
       slotId,
-      appointmentDate: slot.date,
-
+      appointmentDate: reservedSlot.date,
     });
-
-  slot.isBooked = true;
-
-  await slot.save();
+  } catch (error) {
+    await Slot.findOneAndUpdate(
+      { _id: slotId, isBooked: true },
+      { $set: { isBooked: false } },
+    );
+    throw error;
+  }
 
   return{
     appointment

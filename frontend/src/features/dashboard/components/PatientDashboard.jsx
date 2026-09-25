@@ -54,7 +54,7 @@ const PatientDashboard = ({ dashboard }) => {
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link to="/doctors" className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500">
-              Find a doctor <ArrowRight size={16} />
+              Book an appointment <ArrowRight size={16} />
             </Link>
             <Link to="/appointments" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-bold text-white hover:bg-white/15">
               View appointments
@@ -111,9 +111,9 @@ const PatientDashboard = ({ dashboard }) => {
             <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
               <CalendarDays className="mx-auto text-slate-300" size={28} />
               <p className="mt-3 font-bold text-slate-800">No upcoming appointment</p>
-              <p className="mt-1 text-sm text-slate-500">Find a doctor when you are ready to schedule your screening.</p>
+              <p className="mt-1 text-sm text-slate-500">Choose a doctor and available slot when you are ready to schedule your screening.</p>
               <Link to="/doctors" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700">
-                Explore doctors <ArrowRight size={15} />
+                Book an appointment <ArrowRight size={15} />
               </Link>
             </div>
           )}
@@ -153,9 +153,9 @@ const PatientDashboard = ({ dashboard }) => {
       </section>
 
       <div className="flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/70 px-5 py-4 text-sm text-blue-900 sm:px-6">
-        <p>Need help planning your next screening appointment?</p>
+        <p>Ready to plan your next screening appointment?</p>
         <Link to="/doctors" className="ml-4 inline-flex shrink-0 items-center gap-1 font-bold text-blue-700 hover:text-blue-800">
-          Get started <ArrowRight size={15} />
+          Book appointment <ArrowRight size={15} />
         </Link>
       </div>
     </div>

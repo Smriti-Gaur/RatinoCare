@@ -180,14 +180,14 @@ const AppointmentPage = () => {
             <p className="mt-1 text-sm text-slate-500">
               {isDoctor
                 ? "When a patient books a screening visit, it will appear here."
-                : "Explore doctors and reserve your next screening time slot."}
+                : "Book an appointment and reserve your next screening time slot."}
             </p>
             {!isDoctor && (
               <Link
                 to="/doctors"
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
               >
-                Find a doctor <ArrowRight size={16} />
+                Book an appointment <ArrowRight size={16} />
               </Link>
             )}
           </div>
