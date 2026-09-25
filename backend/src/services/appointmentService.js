@@ -211,6 +211,13 @@ export const updateAppointmentStatusService = async (
 
   await appointment.save();
 
+  if (status === "cancelled" && appointment.slotId) {
+    await Slot.findOneAndUpdate(
+      { _id: appointment.slotId },
+      { $set: { isBooked: false } }
+    );
+  }
+
   return {
     message: "Appointment status updated",
     appointment,

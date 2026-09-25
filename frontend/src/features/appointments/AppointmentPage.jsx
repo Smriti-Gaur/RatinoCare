@@ -96,10 +96,21 @@ const AppointmentPage = () => {
 
   const handleStatusUpdate = async (appointmentId, nextStatus) => {
     setActionLoadingId(appointmentId);
+    setError(null);
 
     try {
-      await updateAppointmentStatus(appointmentId, nextStatus);
-      await loadAppointments();
+      const data = await updateAppointmentStatus(appointmentId, nextStatus);
+      setAppointments((currentAppointments) =>
+        currentAppointments.map((appointment) =>
+          appointment._id === appointmentId
+            ? {
+                ...appointment,
+                ...(data.appointment || {}),
+                status: data.appointment?.status || nextStatus,
+              }
+            : appointment
+        )
+      );
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -109,10 +120,21 @@ const AppointmentPage = () => {
 
   const handleCancel = async (appointmentId) => {
     setActionLoadingId(appointmentId);
+    setError(null);
 
     try {
-      await cancelAppointment(appointmentId);
-      await loadAppointments();
+      const data = await cancelAppointment(appointmentId);
+      setAppointments((currentAppointments) =>
+        currentAppointments.map((appointment) =>
+          appointment._id === appointmentId
+            ? {
+                ...appointment,
+                ...(data.appointment || {}),
+                status: data.appointment?.status || "cancelled",
+              }
+            : appointment
+        )
+      );
     } catch (requestError) {
       setError(requestError.message);
     } finally {
