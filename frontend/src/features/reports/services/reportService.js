@@ -10,6 +10,13 @@ export const fetchReportById = async (reportId) => {
   return response.data;
 };
 
+export const downloadReportPdf = async (reportId) => {
+  const response = await api.get(`/reports/${reportId}/pdf`, {
+    responseType: "blob",
+  });
+  return response.data;
+};
+
 export const createReport = async (reportData) => {
   const response = await api.post("/reports/create", reportData);
   return response.data;

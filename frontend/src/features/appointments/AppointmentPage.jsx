@@ -105,7 +105,6 @@ const AppointmentPage = () => {
           appointment._id === appointmentId
             ? {
                 ...appointment,
-                ...(data.appointment || {}),
                 status: data.appointment?.status || nextStatus,
               }
             : appointment
@@ -129,7 +128,6 @@ const AppointmentPage = () => {
           appointment._id === appointmentId
             ? {
                 ...appointment,
-                ...(data.appointment || {}),
                 status: data.appointment?.status || "cancelled",
               }
             : appointment

@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ClipboardPlus,
   FileText,
+  Download,
   RefreshCw,
   ShieldCheck,
   Stethoscope,
@@ -18,6 +19,7 @@ import {
   fetchMyReports,
   fetchPatientReports,
   fetchDoctorReports,
+  downloadReportPdf,
 } from "./services/reportService";
 
 const severityStyles = {
@@ -45,11 +47,11 @@ const formatAppointmentDate = (appointment) => {
 
 const reportCardClass = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-900/5";
 
-const ReportCard = ({ report, isDoctor }) => {
+const ReportCard = ({ report, isDoctor, onDownload, downloading }) => {
   const person = isDoctor ? report.patientId : report.doctorId;
 
   return (
-    <article className={reportCardClass}>
+    <article id={`report-${report._id}`} className={reportCardClass}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-600">
@@ -79,6 +81,17 @@ const ReportCard = ({ report, isDoctor }) => {
         <p className="mt-4 text-xs font-bold uppercase tracking-[0.13em] text-slate-400">Recommendation</p>
         <p className="mt-2 text-sm leading-6 text-slate-700">{report.recommendation}</p>
       </div>
+
+      {!isDoctor && (
+        <div className="mt-5 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
+          <a href={`#report-${report._id}`} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700">
+            <FileText size={16} /> View report
+          </a>
+          <button type="button" onClick={() => onDownload(report)} disabled={downloading} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
+            <Download size={16} /> {downloading ? "Preparing PDF..." : "Download PDF"}
+          </button>
+        </div>
+      )}
     </article>
   );
 };
@@ -90,6 +103,7 @@ const ReportsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [downloadingReportId, setDownloadingReportId] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [lookupType, setLookupType] = useState("patient");
   const [lookupId, setLookupId] = useState("");
@@ -103,9 +117,16 @@ const ReportsPage = () => {
 
   const isDoctor = user?.role === "doctor";
   const isAdmin = user?.role === "admin";
+  const reportedAppointmentIds = useMemo(
+    () => new Set(reports.map((report) => report.appointmentId?._id || report.appointmentId)),
+    [reports],
+  );
   const completedAppointments = useMemo(
-    () => appointments.filter((appointment) => appointment.status === "completed"),
-    [appointments],
+    () => appointments.filter(
+      (appointment) => appointment.status === "completed"
+        && !reportedAppointmentIds.has(appointment._id),
+    ),
+    [appointments, reportedAppointmentIds],
   );
 
   const loadReports = useCallback(async () => {
@@ -206,6 +227,27 @@ const ReportsPage = () => {
     }
   };
 
+  const handleDownload = async (report) => {
+    setDownloadingReportId(report._id);
+    setError(null);
+
+    try {
+      const pdf = await downloadReportPdf(report._id);
+      const url = URL.createObjectURL(pdf);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ratinocare-report-${report._id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setDownloadingReportId(null);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -249,7 +291,7 @@ const ReportsPage = () => {
             </div>
 
             {completedAppointments.length === 0 ? (
-              <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">There are no completed appointments ready for reporting.</div>
+              <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">There are no completed appointments without an existing report.</div>
             ) : (
               <form onSubmit={handleCreateReport} className="mt-6 grid gap-5 lg:grid-cols-2">
                 <label className="space-y-2 text-sm font-semibold text-slate-700 lg:col-span-2"><span>Completed appointment</span><select required value={form.appointmentId} onChange={(event) => handleAppointmentChange(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"><option value="">Select an appointment</option>{completedAppointments.map((appointment) => <option key={appointment._id} value={appointment._id}>{appointment.patientId?.name || "Patient"} - {formatAppointmentDate(appointment)}</option>)}</select></label>
@@ -263,7 +305,7 @@ const ReportsPage = () => {
           </section>
         )}
 
-        {!isAdmin && (loading ? <div className="grid gap-5 lg:grid-cols-2">{Array.from({ length: 2 }, (_, index) => <div key={index} className="h-64 animate-pulse rounded-2xl bg-slate-200" />)}</div> : reports.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"><FileText className="mx-auto text-slate-300" size={34} /><p className="mt-3 font-bold text-slate-800">No reports available yet</p><p className="mt-1 text-sm text-slate-500">Completed screening reports will appear here once they are recorded.</p></div> : <div className="grid gap-5 lg:grid-cols-2">{reports.map((report) => <ReportCard key={report._id} report={report} isDoctor={isDoctor} />)}</div>)}
+        {!isAdmin && (loading ? <div className="grid gap-5 lg:grid-cols-2">{Array.from({ length: 2 }, (_, index) => <div key={index} className="h-64 animate-pulse rounded-2xl bg-slate-200" />)}</div> : reports.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"><FileText className="mx-auto text-slate-300" size={34} /><p className="mt-3 font-bold text-slate-800">No reports available yet</p><p className="mt-1 text-sm text-slate-500">Completed screening reports will appear here once they are recorded.</p></div> : <div className="grid gap-5 lg:grid-cols-2">{reports.map((report) => <ReportCard key={report._id} report={report} isDoctor={isDoctor} onDownload={handleDownload} downloading={downloadingReportId === report._id} />)}</div>)}
 
         {isAdmin && (
           <>

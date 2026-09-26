@@ -7,6 +7,7 @@ import {
   getReportByIdService,
   getMyReportsService,
 } from "../services/reportService.js";
+import { generateReportPdf } from "../services/reportPdfService.js";
 
 export const createReport = asyncHandler(
   async (req, res) => {
@@ -68,4 +69,19 @@ export const getMyReports =
 
     res.status(200).json(data);
 
+  });
+
+export const downloadReportPdf =
+  asyncHandler(async (req, res) => {
+    const data = await getReportByIdService(req.params.id);
+    const pdf = await generateReportPdf(data.report);
+
+    res
+      .status(200)
+      .set({
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="ratinocare-report-${req.params.id}.pdf"`,
+        "Content-Length": pdf.length,
+      })
+      .send(pdf);
   });
