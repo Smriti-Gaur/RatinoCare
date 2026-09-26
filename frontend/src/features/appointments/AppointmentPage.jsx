@@ -216,8 +216,7 @@ const AppointmentPage = () => {
               const slot = appointment.slotId || {};
               const personName = isDoctor ? appointment.patientId?.name : appointment.doctorId?.name;
               const personRole = isDoctor ? "Patient" : "Doctor";
-              const statusActions = getStatusActions(appointment.status);
-              const canCancel = appointment.status !== "completed" && appointment.status !== "cancelled";
+              const statusActions = isDoctor ? getStatusActions(appointment.status) : [];
 
               return (
                 <article key={appointment._id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-900/5">
@@ -268,8 +267,8 @@ const AppointmentPage = () => {
                     </div>
                   )}
 
-                  {!isDoctor && canCancel && (
-                    <div className="mt-5 pt-5 border-t border-slate-100">
+                  {isDoctor && appointment.status !== "completed" && appointment.status !== "cancelled" && (
+                    <div className="mt-5 border-t border-slate-100 pt-5">
                       <button
                         type="button"
                         disabled={actionLoadingId === appointment._id}

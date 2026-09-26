@@ -95,7 +95,7 @@ router.patch(
 router.patch(
     "/:id/cancel",
     protect,
-    authorize("patient","doctor"),
+    authorize("doctor"),
     validateAppointmentId,
     cancelAppointment
 );

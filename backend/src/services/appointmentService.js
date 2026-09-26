@@ -240,10 +240,7 @@ export const cancelAppointmentService = async (
     );
   }
 
-  const isOwner = [appointment.patientId, appointment.doctorId]
-    .some((ownerId) => ownerId.toString() === user.id);
-
-  if (user.role !== "admin" && !isOwner) {
+  if (user.role !== "admin" && appointment.doctorId.toString() !== user.id) {
     throw new ApiError(403, "You can cancel only your own appointments");
   }
 
