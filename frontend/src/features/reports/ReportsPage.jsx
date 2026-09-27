@@ -19,6 +19,7 @@ import {
   fetchMyReports,
   fetchPatientReports,
   fetchDoctorReports,
+  searchReports,
   downloadReportPdf,
 } from "./services/reportService";
 
@@ -51,7 +52,7 @@ const ReportCard = ({ report, isDoctor, onDownload, downloading }) => {
   const person = isDoctor ? report.patientId : report.doctorId;
 
   return (
-    <article id={`report-${report._id}`} className={reportCardClass}>
+    <article id={`report-${report.publicId || report._id}`} className={reportCardClass}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-600">
@@ -65,6 +66,7 @@ const ReportCard = ({ report, isDoctor, onDownload, downloading }) => {
       </div>
 
       <div className="mt-5 space-y-3 text-sm text-slate-600">
+        <p className="font-bold text-blue-700">Report ID: {report.publicId || "Not available"}</p>
         <p className="flex items-start gap-2">
           <CalendarDays size={16} className="mt-0.5 shrink-0 text-slate-400" />
           <span>Created {formatDate(report.createdAt)}</span>
@@ -84,7 +86,7 @@ const ReportCard = ({ report, isDoctor, onDownload, downloading }) => {
 
       {!isDoctor && (
         <div className="mt-5 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
-          <a href={`#report-${report._id}`} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700">
+          <a href={`#report-${report.publicId || report._id}`} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700">
             <FileText size={16} /> View report
           </a>
           <button type="button" onClick={() => onDownload(report)} disabled={downloading} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
@@ -215,9 +217,11 @@ const ReportsPage = () => {
     setError(null);
 
     try {
-      const data = lookupType === "patient"
-        ? await fetchPatientReports(lookupId.trim())
-        : await fetchDoctorReports(lookupId.trim());
+      const data = lookupType === "all"
+        ? await searchReports(lookupId.trim())
+        : lookupType === "patient"
+          ? await fetchPatientReports(lookupId.trim())
+          : await fetchDoctorReports(lookupId.trim());
       setReports(data.reports || []);
     } catch (requestError) {
       setReports([]);
@@ -228,15 +232,15 @@ const ReportsPage = () => {
   };
 
   const handleDownload = async (report) => {
-    setDownloadingReportId(report._id);
+    setDownloadingReportId(report.publicId || report._id);
     setError(null);
 
     try {
-      const pdf = await downloadReportPdf(report._id);
+      const pdf = await downloadReportPdf(report.publicId || report._id);
       const url = URL.createObjectURL(pdf);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `ratinocare-report-${report._id}.pdf`;
+      link.download = `ratinocare-report-${report.publicId || "report"}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -315,8 +319,8 @@ const ReportsPage = () => {
                 <div><h2 className="text-xl font-bold text-slate-950">Find report records</h2><p className="mt-1 text-sm text-slate-500">Use a patient or doctor ID to review linked screening reports.</p></div>
               </div>
               <div className="mt-6 grid gap-4 md:grid-cols-[180px_1fr_auto] md:items-end">
-                <label className="space-y-2 text-sm font-semibold text-slate-700"><span>Search by</span><select value={lookupType} onChange={(event) => setLookupType(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"><option value="patient">Patient ID</option><option value="doctor">Doctor ID</option></select></label>
-                <label className="space-y-2 text-sm font-semibold text-slate-700"><span>{lookupType === "patient" ? "Patient" : "Doctor"} ID</span><input required value={lookupId} onChange={(event) => setLookupId(event.target.value)} placeholder="Enter MongoDB ID" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15" /></label>
+                <label className="space-y-2 text-sm font-semibold text-slate-700"><span>Search by</span><select value={lookupType} onChange={(event) => setLookupType(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"><option value="all">All report fields</option><option value="patient">Patient ID</option><option value="doctor">Doctor ID</option></select></label>
+                <label className="space-y-2 text-sm font-semibold text-slate-700"><span>{lookupType === "patient" ? "Patient ID" : lookupType === "doctor" ? "Doctor ID" : "Report ID, patient, doctor, or date"}</span><input required value={lookupId} onChange={(event) => setLookupId(event.target.value)} placeholder={lookupType === "patient" ? "RC-PAT-000001" : lookupType === "doctor" ? "RC-DOC-000001" : "RC-RPT-000001 or 2026-09-27"} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15" /></label>
                 <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700"><FileText size={16} /> Load reports</button>
               </div>
             </form>

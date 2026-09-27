@@ -1,4 +1,8 @@
 import ApiError from "../utils/ApiError.js";
+import {
+  validateLicenseNumber,
+  validateSpecialization,
+} from "./doctorLicenseValidator.js";
 
 export const validateRegister = (
   req,
@@ -70,16 +74,12 @@ export const validateRegister = (
     );
   }
 
-  // Doctor Specific Credential Validation
   if (role === "doctor") {
-    const { medicalLicenseNumber, specialization } = req.body;
-    if (!medicalLicenseNumber || !specialization) {
-      return next(
-        new ApiError(
-          400,
-          "Medical License Number and Specialization are required for Doctor registration"
-        )
-      );
+    try {
+      validateLicenseNumber(req.body.medicalLicenseNumber);
+      validateSpecialization(req.body.specialization);
+    } catch (error) {
+      return next(error);
     }
   }
 

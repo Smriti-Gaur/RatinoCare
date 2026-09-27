@@ -1,7 +1,7 @@
 import api from "../../../services/api";
 
-export const fetchMyAppointments = async () => {
-  const response = await api.get("/appointments/my-appointments");
+export const fetchMyAppointments = async (search = "") => {
+  const response = await api.get("/appointments/my-appointments", { params: search ? { search } : {} });
   return response.data;
 };
 

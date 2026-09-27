@@ -1,8 +1,48 @@
+import mongoose from "mongoose";
 import Appointment from "../models/Appointment.js";
 import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import QueryFeatures from "../utils/QueryFeatures.js";
 import Slot from "../models/Slot.js";
+
+const findAppointment = (id) => {
+  if (id?.startsWith?.("RC-APT-")) return Appointment.findOne({ publicId: id });
+  const query = [{ publicId: id }];
+  if (mongoose.Types.ObjectId.isValid(id)) query.push({ _id: id });
+  return Appointment.findOne({ $or: query });
+};
+
+const findUserByPublicOrObjectId = async (id) => {
+  const query = [{ publicId: id }];
+  if (mongoose.Types.ObjectId.isValid(id)) query.push({ _id: id });
+  return User.findOne({ $or: query });
+};
+
+  const addAppointmentSearch = async (features, keyword) => {
+    const value = keyword?.trim();
+    if (!value) return;
+
+    const people = await User.find({
+      $or: [
+        { publicId: { $regex: value, $options: "i" } },
+        { name: { $regex: value, $options: "i" } },
+        { specialization: { $regex: value, $options: "i" } },
+      ],
+    }).select("_id");
+    const searchClauses = [
+      { publicId: { $regex: value, $options: "i" } },
+      { status: { $regex: value, $options: "i" } },
+      { patientId: { $in: people.map((person) => person._id) } },
+      { doctorId: { $in: people.map((person) => person._id) } },
+    ];
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+      searchClauses.push({ appointmentDate: { $gte: date, $lt: nextDate } });
+    }
+    features.filterQuery.$or = searchClauses;
+  };
 
 export const createAppointmentService = async (
   user,
@@ -44,8 +84,7 @@ export const createAppointmentService = async (
   }
 
   // Check Doctor
-  const doctor =
-    await User.findById(doctorId);
+  const doctor = await findUserByPublicOrObjectId(doctorId);
 
   if (!doctor) {
     throw new ApiError(
@@ -99,19 +138,21 @@ export const getAllAppointmentsService = async (
     queryParams
   )
     .filter()
-    .search([]) // No searchable fields in Appointment yet
+    .search(["publicId", "status"])
     .sort()
     .selectFields()
     .paginate();
 
+  await addAppointmentSearch(features, queryParams.search);
+
   const appointments = await features.execute([
     {
       path: "patientId",
-      select: "name email role",
+      select: "publicId name email role",
     },
     {
       path: "doctorId",
-      select: "name email role",
+      select: "publicId name email role",
     },
     {
       path: "slotId",
@@ -132,16 +173,16 @@ async(id, user)=>{
 
 
     const appointment =
-    await Appointment.findById(id)
+    await findAppointment(id)
 
     .populate(
         "patientId",
-        "name email role"
+        "publicId name email role"
     )
 
     .populate(
         "doctorId",
-        "name email role"
+        "publicId name email role"
     )
 
     .populate("slotId");
@@ -176,7 +217,7 @@ export const updateAppointmentStatusService = async (
 ) => {
 
   const appointment =
-    await Appointment.findById(id);
+    await findAppointment(id);
 
   if (!appointment) {
     throw new ApiError(
@@ -231,7 +272,7 @@ export const cancelAppointmentService = async (
 ) => {
 
   const appointment =
-    await Appointment.findById(id);
+    await findAppointment(id);
 
   if (!appointment) {
     throw new ApiError(
@@ -407,7 +448,7 @@ const features = new QueryFeatures(
   queryParams
 )
   .filter()
-  .search([])
+  .search(["publicId", "status"])
   .sort()
   .selectFields()
   .paginate();
@@ -418,14 +459,16 @@ features.addFilter(
     patientId
 );
 
+await addAppointmentSearch(features, queryParams.search);
+
 const appointments = await features.execute([
   {
     path: "patientId",
-    select: "name email role",
+    select: "publicId name email role",
   },
   {
     path: "doctorId",
-    select: "name email role",
+    select: "publicId name email role",
   },
   {
     path: "slotId",
@@ -445,8 +488,7 @@ export const getDoctorAppointmentsService =
 async(doctorId, queryParams = {})=>{
 
 
-    const doctor =
-    await User.findById(doctorId);
+    const doctor = await findUserByPublicOrObjectId(doctorId);
 
     if(!doctor){
 
@@ -478,13 +520,15 @@ async(doctorId, queryParams = {})=>{
     doctorId
 )
 
-.search([])
+.search(["publicId", "status"])
 
 .sort()
 
 .selectFields()
 
 .paginate();
+
+await addAppointmentSearch(features, queryParams.search);
 
 const appointments =
 await features.execute([
@@ -548,29 +592,22 @@ export const getMyAppointmentsService = async (
     throw new ApiError(403, "Invalid role");
   }
 
-  else {
-
-    throw new ApiError(
-      403,
-      "Invalid role"
-    );
-
-  }
-
   features
-    .search([]) // No searchable Appointment fields yet
+    .search(["publicId", "status"])
     .sort()
     .selectFields()
     .paginate();
 
+  await addAppointmentSearch(features, queryParams.search);
+
   const appointments = await features.execute([
     {
       path: "patientId",
-      select: "name email role",
+      select: "publicId name email role",
     },
     {
       path: "doctorId",
-      select: "name email role",
+      select: "publicId name email role",
     },
     {
       path: "slotId",

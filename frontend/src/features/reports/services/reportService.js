@@ -31,3 +31,8 @@ export const fetchDoctorReports = async (doctorId) => {
   const response = await api.get(`/reports/doctor/${doctorId}`);
   return response.data;
 };
+
+export const searchReports = async (search) => {
+  const response = await api.get(`/reports/search?search=${encodeURIComponent(search)}`);
+  return response.data;
+};

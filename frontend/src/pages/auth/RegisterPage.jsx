@@ -157,7 +157,7 @@ const RegisterPage = () => {
         formData.role === "doctor"
           ? "Doctor registration submitted! Account is pending administrative verification. Redirecting to login..."
           : "Account created successfully! Redirecting to login...";
-      setSuccessBanner(msg);
+      setSuccessBanner(`${msg} Your ${formData.role === "doctor" ? "Doctor" : "Patient"} ID is ${resultAction.payload?.data?.publicId || "being prepared"}.`);
       setTimeout(() => {
         navigate("/login");
       }, 2000);

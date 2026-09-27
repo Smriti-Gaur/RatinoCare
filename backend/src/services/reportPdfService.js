@@ -70,19 +70,23 @@ export const generateReportPdf = (report) => new Promise((resolve, reject) => {
     .text("A patient copy of the screening report recorded in RatinoCare.");
 
   addSectionHeading(document, "Patient information");
+  addField(document, "Patient ID", report.patientId?.publicId);
   addField(document, "Name", report.patientId?.name);
   addField(document, "Email", report.patientId?.email);
 
   addSectionHeading(document, "Appointment information");
+  addField(document, "Appointment ID", report.appointmentId?.publicId);
   addField(document, "Appointment date", formatDate(report.appointmentId?.appointmentDate));
   addField(document, "Status", report.appointmentId?.status);
   addField(document, "Reason", report.appointmentId?.reason);
 
   addSectionHeading(document, "Doctor information");
+  addField(document, "Doctor ID", report.doctorId?.publicId);
   addField(document, "Name", report.doctorId?.name);
   addField(document, "Email", report.doctorId?.email);
 
   addSectionHeading(document, "Screening result");
+  addField(document, "Report ID", report.publicId);
   addField(document, "Report date", formatDate(report.createdAt));
   addField(document, "Severity", report.severity);
   addField(document, "Diagnosis", report.diagnosis);

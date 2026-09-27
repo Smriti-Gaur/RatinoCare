@@ -42,6 +42,7 @@ const DoctorCard = ({ doctor, selected, onSelect }) => (
       </div>
     </div>
     <div className="mt-6 space-y-3 border-t border-slate-100 pt-4">
+      <p className="text-sm font-bold text-blue-700">Doctor ID: {doctor.publicId || "Not available"}</p>
       <p className="flex items-center gap-2 text-sm text-slate-600">
         <Mail size={16} className="text-slate-400" />
         <span className="truncate">{doctor.email}</span>
@@ -241,7 +242,8 @@ const DoctorsPage = () => {
             {bookingSuccess && (
               <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-900">
                 <div className="flex items-center gap-2 font-bold"><CheckCircle2 size={19} /> Appointment booked successfully.</div>
-                <p className="mt-2 text-sm">Your appointment with {selectedDoctor.name} is now in My Appointments.</p>
+                <p className="mt-2 text-sm">Appointment ID: <strong>{bookingSuccess.publicId || "Not available"}</strong></p>
+                <p className="mt-1 text-sm">Your appointment with {selectedDoctor.name} is now in My Appointments.</p>
                 <Link to="/appointments" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700">View My Appointments <ArrowRight size={16} /></Link>
               </div>
             )}

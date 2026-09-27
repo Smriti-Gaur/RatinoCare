@@ -41,6 +41,7 @@ const ProfilePage = () => {
               <div><h2 className="text-xl font-bold text-slate-950">{user.name}</h2><p className="mt-1 text-sm capitalize text-slate-500">{user.role} account</p></div>
             </div>
             <dl className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div><dt className="text-xs font-bold uppercase tracking-[0.13em] text-slate-400">{user.role === "doctor" ? "Doctor ID" : "Patient ID"}</dt><dd className="mt-2 text-sm font-semibold text-slate-800">{user.publicId || "Not available"}</dd></div>
               <div><dt className="text-xs font-bold uppercase tracking-[0.13em] text-slate-400">Email</dt><dd className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-800"><Mail size={16} className="text-blue-600" />{user.email}</dd></div>
               <div><dt className="text-xs font-bold uppercase tracking-[0.13em] text-slate-400">Role</dt><dd className="mt-2 flex items-center gap-2 text-sm font-semibold capitalize text-slate-800"><ShieldCheck size={16} className="text-emerald-600" />{user.role}</dd></div>
               {user.role === "doctor" && <>

@@ -1,7 +1,15 @@
 import mongoose from "mongoose";
+import { getNextPublicId } from "../utils/publicId.js";
 
 const userSchema = new mongoose.Schema(
   {
+    publicId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+
     name: {
       type: String,
       required: true,
@@ -46,6 +54,12 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+userSchema.pre("validate", async function assignPublicId() {
+  if (!this.isNew || this.publicId || this.role === "admin") return;
+
+  this.publicId = await getNextPublicId(this.role === "doctor" ? "RC-DOC" : "RC-PAT");
+});
 
 const User = mongoose.model("User", userSchema);
 

@@ -5,7 +5,7 @@ export const getAllDoctorsService = async () => {
 
   const doctors = await User.find({
     role: "doctor",
-  }).select("-password");
+  }).select("publicId name email role medicalLicenseNumber specialization isApproved");
 
   if (doctors.length === 0) {
     throw new ApiError(

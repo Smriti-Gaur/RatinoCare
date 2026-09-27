@@ -46,6 +46,7 @@ const AppointmentPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [appointmentSearch, setAppointmentSearch] = useState("");
 
   const isDoctor = user?.role === "doctor";
 
@@ -54,7 +55,7 @@ const AppointmentPage = () => {
     setError(null);
 
     try {
-      const data = await fetchMyAppointments();
+      const data = await fetchMyAppointments(appointmentSearch);
       setAppointments(data.appointments || []);
     } catch (requestError) {
       setAppointments([]);
@@ -92,7 +93,7 @@ const AppointmentPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [user?.role]);
+  }, [appointmentSearch, user?.role]);
 
   const handleStatusUpdate = async (appointmentId, nextStatus) => {
     setActionLoadingId(appointmentId);
@@ -182,6 +183,11 @@ const AppointmentPage = () => {
           </div>
         )}
 
+        <label className="block max-w-xl">
+          <span className="text-sm font-bold text-slate-700">Search appointments</span>
+          <input type="search" value={appointmentSearch} onChange={(event) => setAppointmentSearch(event.target.value)} placeholder="Appointment ID, doctor, date, or status" className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15" />
+        </label>
+
         {loading ? (
           <div className="grid gap-5 lg:grid-cols-2">
             {Array.from({ length: 4 }, (_, index) => (
@@ -229,6 +235,7 @@ const AppointmentPage = () => {
                       {appointment.status}
                     </span>
                   </div>
+                  <p className="mt-4 text-sm font-bold text-blue-700">Appointment ID: {appointment.publicId || "Not available"}</p>
 
                   <div className="mt-6 space-y-3 text-sm text-slate-600">
                     <p className="flex items-center gap-2">

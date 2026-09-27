@@ -86,11 +86,7 @@ export const validateAppointmentId = (
   next
 ) => {
 
-  if (
-    !mongoose.Types.ObjectId.isValid(
-      req.params.id
-    )
-  ) {
+  if (!/^RC-APT-\d{6}$/.test(req.params.id) && !mongoose.Types.ObjectId.isValid(req.params.id)) {
     return next(
       new ApiError(
         400,
@@ -109,11 +105,7 @@ export const validatePatientId = (
   next
 ) => {
 
-  if (
-    !mongoose.Types.ObjectId.isValid(
-      req.params.patientId
-    )
-  ) {
+  if (!/^RC-PAT-\d{6}$/.test(req.params.patientId) && !mongoose.Types.ObjectId.isValid(req.params.patientId)) {
     return next(
       new ApiError(
         400,
@@ -132,11 +124,7 @@ export const validateDoctorId = (
   next
 ) => {
 
-  if (
-    !mongoose.Types.ObjectId.isValid(
-      req.params.doctorId
-    )
-  ) {
+  if (!/^RC-DOC-\d{6}$/.test(req.params.doctorId) && !mongoose.Types.ObjectId.isValid(req.params.doctorId)) {
     return next(
       new ApiError(
         400,

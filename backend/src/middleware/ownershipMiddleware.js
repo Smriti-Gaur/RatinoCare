@@ -1,6 +1,15 @@
 import Report from "../models/Report.js";
+import User from "../models/User.js";
+import mongoose from "mongoose";
 
-export const verifyPatientOwnership = (
+const resolveUserId = async (publicOrObjectId) => {
+  const query = [{ publicId: publicOrObjectId }];
+  if (mongoose.Types.ObjectId.isValid(publicOrObjectId)) query.push({ _id: publicOrObjectId });
+  const user = await User.findOne({ $or: query }).select("_id");
+  return user?._id?.toString();
+};
+
+export const verifyPatientOwnership = async (
   req,
   res,
   next
@@ -14,7 +23,7 @@ export const verifyPatientOwnership = (
   // Patient can access only own data
   if (
     req.user.role === "patient" &&
-    req.user.id === req.params.patientId
+    req.user.id === await resolveUserId(req.params.patientId)
   ) {
     return next();
   }
@@ -26,7 +35,7 @@ export const verifyPatientOwnership = (
 
 };
 
-export const verifyDoctorOwnership = (
+export const verifyDoctorOwnership = async (
   req,
   res,
   next
@@ -39,7 +48,7 @@ export const verifyDoctorOwnership = (
 
   if (
     req.user.role === "doctor" &&
-    req.user.id === req.params.doctorId
+    req.user.id === await resolveUserId(req.params.doctorId)
   ) {
     return next();
   }
@@ -58,9 +67,9 @@ export const verifyReportOwnership = async (
 ) => {
   try {
 
-    const report = await Report.findById(
-      req.params.id
-    );
+    const reportQuery = [{ publicId: req.params.id }];
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) reportQuery.push({ _id: req.params.id });
+    const report = await Report.findOne({ $or: reportQuery });
 
     if (!report) {
       return res.status(404).json({

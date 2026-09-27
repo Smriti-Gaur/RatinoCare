@@ -1,7 +1,15 @@
 import mongoose from "mongoose";
+import { getNextPublicId } from "../utils/publicId.js";
 
 const appointmentSchema = new mongoose.Schema(
   {
+    publicId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -37,6 +45,12 @@ const appointmentSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+appointmentSchema.pre("validate", async function assignPublicId() {
+  if (!this.isNew || this.publicId) return;
+
+  this.publicId = await getNextPublicId("RC-APT");
+});
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);
 

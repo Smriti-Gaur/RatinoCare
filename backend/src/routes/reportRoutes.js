@@ -6,6 +6,7 @@ import {
   getReportById,
   downloadReportPdf,
   getMyReports
+  ,searchReports
 } from "../controllers/reportController.js";
 
 import {
@@ -56,6 +57,8 @@ router.get(
   authorize("patient", "doctor"),
   getMyReports
 );
+
+router.get("/search", protect, authorize("admin"), searchReports);
 
 router.get(
   "/:id/pdf",

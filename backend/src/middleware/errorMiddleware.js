@@ -5,6 +5,8 @@ const errorHandler = (
     next
 )=>{
 
+    console.error(err);
+
     const statusCode =
         err.statusCode || 500;
 
@@ -12,12 +14,9 @@ const errorHandler = (
 
         success:false,
 
-        message:err.message,
-
-        stack:
-        process.env.NODE_ENV==="production"
-        ? undefined
-        : err.stack
+        message: err.statusCode || process.env.NODE_ENV === "development"
+            ? err.message
+            : "An unexpected server error occurred",
 
     });
 

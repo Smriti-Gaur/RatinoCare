@@ -9,13 +9,13 @@ import asyncHandler from  "../utils/asyncHandler.js";
 export const registerUser =
 asyncHandler(async(req,res)=>{
 
-    await registerUserService(req.body);
+    const data = await registerUserService(req.body);
 
     return res.status(201).json(
 
         new ApiResponse(
             201,
-            null,
+            data.user,
             "User Registered Successfully"
         )
 
