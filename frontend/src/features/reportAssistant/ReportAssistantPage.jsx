@@ -1,86 +1,127 @@
 import { useState } from "react";
-import { FileText, LoaderCircle, MessageCircleQuestion, ShieldAlert, Upload } from "lucide-react";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import { useSelector } from "react-redux";
+import {
+  AlertCircle,
+  Bot,
+  FileText,
+  LoaderCircle,
+  MessageCircleQuestion,
+  Send,
+  Upload,
+  User,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import DashboardLayout from "../dashboard/components/DashboardLayout";
-
-const extractPdfText = async (file) => {
-  const buffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-  const pages = [];
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-    pages.push(content.items.map((item) => item.str).join(" "));
-  }
-  return pages.join("\n").trim();
-};
-
-const answerFromReport = (question, reportText) => {
-  const normalizedQuestion = question.toLowerCase();
-  const lines = reportText.split(/\n|(?<=[.!?])\s+/).map((line) => line.trim()).filter(Boolean);
-  const terms = normalizedQuestion.split(/\W+/).filter((term) => term.length > 3);
-  const matches = lines.filter((line) => terms.some((term) => line.toLowerCase().includes(term))).slice(0, 3);
-
-  if (matches.length) return `I found these matching report excerpts:\n\n${matches.join("\n")}`;
-  return "I could not find that information in this report. Please ask your doctor to interpret results that are unclear or missing.";
-};
+import { askRagQuestion, uploadRagDocument } from "./services/ragApi";
 
 const ReportAssistantPage = () => {
-  const [reportText, setReportText] = useState("");
-  const [fileName, setFileName] = useState("");
+  const user = useSelector((state) => state.auth.user);
+  const [documentId, setDocumentId] = useState(null);
+  const [documentName, setDocumentName] = useState(null);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [pendingQuestion, setPendingQuestion] = useState("");
   const [error, setError] = useState(null);
 
   const handleUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      setError("Please select a PDF file.");
+      event.target.value = "";
+      return;
+    }
+
+    if (!user?._id) {
+      setError("Your authenticated profile is not ready. Please try again.");
+      return;
+    }
+
     setError(null);
-    setLoading(true);
+    setUploading(true);
     setMessages([]);
+    setDocumentId(null);
+    setDocumentName(null);
+
     try {
-      if (file.type !== "application/pdf") throw new Error("Please upload a PDF report.");
-      const text = await extractPdfText(file);
-      if (!text) throw new Error("No readable text was found in this PDF.");
-      setReportText(text);
-      setFileName(file.name);
+      const data = await uploadRagDocument(file, user._id);
+      setDocumentId(data.document_id);
+      setDocumentName(file.name);
+      setQuestion("");
     } catch (requestError) {
-      setReportText("");
-      setFileName("");
-      setError(requestError.message);
+      setError(requestError.message || "Something went wrong while uploading the document.");
     } finally {
-      setLoading(false);
+      setUploading(false);
+      event.target.value = "";
     }
   };
 
-  const handleAsk = (event) => {
-    event.preventDefault();
+  const handleAsk = async (event) => {
+    event?.preventDefault();
     const trimmedQuestion = question.trim();
-    if (!trimmedQuestion || !reportText) return;
-    setMessages((current) => [...current, { question: trimmedQuestion, answer: answerFromReport(trimmedQuestion, reportText) }]);
-    setQuestion("");
+
+    if (!trimmedQuestion || !documentId || !user?._id || asking) return;
+
+    setAsking(true);
+    setPendingQuestion(trimmedQuestion);
+    setError(null);
+
+    try {
+      const data = await askRagQuestion(trimmedQuestion, user._id, documentId);
+      setMessages((current) => [
+        ...current,
+        {
+          question: trimmedQuestion,
+          answer: data.answer || "",
+          sources: Array.isArray(data.sources) ? data.sources : [],
+        },
+      ]);
+      setQuestion("");
+    } catch (requestError) {
+      setError(requestError.message || "Something went wrong while getting the answer.");
+    } finally {
+      setAsking(false);
+      setPendingQuestion("");
+    }
   };
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-4xl space-y-6">
-        <section className="rounded-3xl bg-slate-950 px-6 py-8 text-white sm:px-8">
-          <div className="flex items-start gap-4"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/15 text-cyan-300"><MessageCircleQuestion size={25} /></div><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">Supporting tool</p><h1 className="mt-3 text-3xl font-bold tracking-tight">AI Report Assistant</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Upload a text-based PDF and ask questions about what it says. Answers are grounded only in extracted report text.</p></div></div>
-        </section>
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-8 text-center hover:bg-blue-50">
-            <Upload className="text-blue-600" size={28} /><span className="mt-3 font-bold text-slate-900">Upload PDF report</span><span className="mt-1 text-sm text-slate-500">Text-based PDFs are supported</span><input type="file" accept="application/pdf" onChange={handleUpload} className="sr-only" />
-          </label>
-          {loading && <p className="mt-4 flex items-center gap-2 text-sm text-slate-600"><LoaderCircle className="animate-spin" size={16} /> Extracting report text...</p>}
-          {fileName && !loading && <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-emerald-700"><FileText size={16} /> {fileName} is ready for questions.</p>}
-          {error && <p className="mt-4 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-800"><ShieldAlert size={17} /> {error}</p>}
-        </section>
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <form onSubmit={handleAsk} className="flex flex-col gap-3 sm:flex-row"><input value={question} onChange={(event) => setQuestion(event.target.value)} disabled={!reportText} placeholder="Ask about a value or section in the report" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15" /><button type="submit" disabled={!reportText || !question.trim()} className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">Ask assistant</button></form>
-          <div className="mt-6 space-y-4">{messages.map((message, index) => <article key={`${message.question}-${index}`} className="rounded-xl border border-slate-100 bg-slate-50 p-4"><p className="font-bold text-slate-900">{message.question}</p><p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{message.answer}</p></article>)}</div>
-        </section>
-        <p className="text-xs leading-5 text-slate-500">This assistant does not diagnose, prescribe, invent missing values, or replace a doctor. It performs local text extraction and matching because the current backend has no AI provider or report-analysis API.</p>
+      <div className="mx-auto flex min-h-[calc(100vh-10rem)] max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-7">
+          <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white"><MessageCircleQuestion size={21} /></div><div><h1 className="font-bold text-slate-900">AI Report Assistant</h1><p className="text-xs text-slate-500">Ask questions about your uploaded medical report</p></div></div>
+          <span className="hidden text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 sm:block">Patient support</span>
+        </header>
+
+        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+          <aside className="border-b border-slate-200 bg-slate-50 p-5 lg:w-64 lg:border-b-0 lg:border-r">
+            <h2 className="font-bold text-slate-900">Documents</h2>
+            <label className={`mt-5 flex h-11 items-center justify-center gap-2 rounded-xl text-sm font-bold text-white transition ${uploading ? "cursor-not-allowed bg-blue-400" : "cursor-pointer bg-blue-600 hover:bg-blue-700"}`}>
+              {uploading ? <LoaderCircle size={17} className="animate-spin" /> : <Upload size={17} />}
+              {uploading ? "Uploading..." : "Upload PDF"}
+              <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={handleUpload} disabled={uploading} />
+            </label>
+            {documentId && <div className="mt-5 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-3"><FileText size={19} className="shrink-0 text-blue-600" /><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-900">{documentName}</p><p className="text-xs text-emerald-700">Ready</p></div></div>}
+            <p className="mt-5 text-xs leading-5 text-slate-500">Answers are generated from this report and should be reviewed with your doctor.</p>
+          </aside>
+
+          <section className="flex min-h-[30rem] min-w-0 flex-1 flex-col">
+            <div className="flex-1 overflow-y-auto px-5 py-7 sm:px-8">
+              {error && <div className="mx-auto mb-6 flex max-w-3xl items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3"><AlertCircle size={18} className="mt-0.5 shrink-0 text-red-500" /><div><p className="text-sm font-bold text-red-800">Something went wrong</p><p className="mt-1 break-words text-sm text-red-700">{error}</p></div></div>}
+              {!messages.length && !pendingQuestion && !error && <div className="flex min-h-[24rem] items-center justify-center text-center"><div className="max-w-md"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600"><Bot size={28} /><span className="sr-only">Medical assistant</span></div><h2 className="mt-5 text-xl font-bold text-slate-900">Ask about your medical report</h2><p className="mt-2 text-sm leading-6 text-slate-500">{documentId ? "Your report is ready. Ask a question to get started." : "Upload a medical PDF and ask questions about the information contained in it."}</p></div></div>}
+              <div className="mx-auto max-w-3xl space-y-6">
+                {messages.map((message, index) => <div key={`${message.question}-${index}`} className="space-y-4"><div className="flex justify-end gap-3"><div className="max-w-2xl rounded-2xl rounded-tr-sm bg-blue-600 px-4 py-3 text-sm whitespace-pre-wrap text-white">{message.question}</div><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200"><User size={16} className="text-slate-600" /></div></div><div className="flex items-start gap-3"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100"><Bot size={16} className="text-blue-600" /></div><div className="min-w-0 rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-5 py-4 text-sm leading-6 text-slate-700"><div className="prose prose-slate max-w-none"><ReactMarkdown remarkPlugins={[remarkGfm]}>{message.answer}</ReactMarkdown></div></div></div>{message.sources.length > 0 && <div className="ml-11"><h3 className="mb-3 text-sm font-bold text-slate-900">Sources</h3><div className="space-y-2">{message.sources.map((source, sourceIndex) => <div key={`${source.document_id}-${source.chunk_index}-${sourceIndex}`} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3"><FileText size={16} className="shrink-0 text-blue-600" /><span className="text-xs text-slate-600"><span className="font-semibold">Page {source.page ?? "N/A"}</span><span className="mx-2">•</span><span>Chunk {source.chunk_index ?? "N/A"}</span></span></div>)}</div></div>}</div>)}
+                {pendingQuestion && <><div className="flex justify-end gap-3"><div className="max-w-2xl rounded-2xl rounded-tr-sm bg-blue-600 px-4 py-3 text-sm whitespace-pre-wrap text-white">{pendingQuestion}</div><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200"><User size={16} className="text-slate-600" /></div></div><div className="flex items-start gap-3"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100"><Bot size={16} className="text-blue-600" /></div><div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-5 py-4"><div className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle size={16} className="animate-spin text-blue-600" />Analyzing your report...</div></div></div></>}
+              </div>
+            </div>
+            <form onSubmit={handleAsk} className="border-t border-slate-200 bg-white p-5"><div className="mx-auto flex max-w-3xl gap-3"><textarea rows="1" value={question} onChange={(event) => { setQuestion(event.target.value); if (error) setError(null); }} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); handleAsk(event); } }} placeholder={documentId ? "Ask a question about your report..." : "Upload a report first..."} disabled={!documentId || asking} className="min-h-11 flex-1 resize-none rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100" /><button type="submit" aria-label="Ask assistant" title="Ask assistant" disabled={!documentId || !question.trim() || asking} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300">{asking ? <LoaderCircle size={17} className="animate-spin" /> : <Send size={17} />}</button></div><p className="mt-2 text-center text-xs text-slate-400">Press Enter to ask. Shift + Enter for a new line.</p></form>
+          </section>
+        </div>
       </div>
     </DashboardLayout>
   );

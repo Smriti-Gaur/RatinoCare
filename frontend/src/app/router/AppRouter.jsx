@@ -9,6 +9,7 @@ import LandingPage from "../../features/landing/LandingPage";
 import LoginPage from "../../pages/auth/LoginPage";
 import RegisterPage from "../../pages/auth/RegisterPage";
 import ProtectedRoute from "../../components/auth/ProtectedRoute";
+import PatientRoute from "../../components/auth/PatientRoute";
 import DashboardPage from "../../features/dashboard/DashboardPage";
 import DoctorsPage from "../../features/doctors/DoctorsPage";
 import AppointmentPage from "../../features/appointments/AppointmentPage";
@@ -72,7 +73,11 @@ const AppRouter = () => {
 
           <Route
             path="/report-analysis"
-            element={<ReportAssistantPage />}
+            element={
+              <PatientRoute>
+                <ReportAssistantPage />
+              </PatientRoute>
+            }
           />
 
           <Route
