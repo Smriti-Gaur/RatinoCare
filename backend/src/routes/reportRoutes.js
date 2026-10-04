@@ -18,6 +18,7 @@ import {
 
 import protect from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
+import requireApprovedDoctor from "../middleware/doctorApprovalMiddleware.js";
 import {
   verifyReportOwnership,
 } from "../middleware/ownershipMiddleware.js";
@@ -30,6 +31,7 @@ router.post(
   "/create",
   protect,
   authorize("doctor"),
+  requireApprovedDoctor,
   validateCreateReport,
   createReport
 );
@@ -55,6 +57,7 @@ router.get(
   "/my-reports",
   protect,
   authorize("patient", "doctor"),
+  requireApprovedDoctor,
   getMyReports
 );
 
@@ -68,6 +71,7 @@ router.get(
     "doctor",
     "admin"
   ),
+  requireApprovedDoctor,
   validateReportId,
   verifyReportOwnership,
   downloadReportPdf
@@ -81,6 +85,7 @@ router.get(
     "doctor",
     "admin"
   ),
+  requireApprovedDoctor,
   validateReportId,
   verifyReportOwnership,
   getReportById

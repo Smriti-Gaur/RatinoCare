@@ -49,6 +49,31 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "suspended"],
+      default: "approved",
+      index: true,
+    },
+
+    approvalReason: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 500,
+    },
+
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -64,4 +89,3 @@ userSchema.pre("validate", async function assignPublicId() {
 const User = mongoose.model("User", userSchema);
 
 export default User;
-

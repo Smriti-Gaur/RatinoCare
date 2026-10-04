@@ -24,7 +24,35 @@ const SummaryCard = ({ label, value, icon: Icon, tone }) => (
   </div>
 );
 
-const DoctorDashboard = ({ dashboard, doctor }) => (
+const DoctorDashboard = ({ dashboard, doctor }) => {
+  const isApproved = dashboard?.isApproved ?? doctor?.isApproved ?? false;
+
+  if (!isApproved) {
+    return (
+      <div className="space-y-8">
+        <section className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-8 text-amber-950 shadow-sm sm:px-8 lg:px-10 lg:py-10">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-700">
+            Verification pending
+          </p>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight">
+            Your doctor account is awaiting approval.
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-amber-900 sm:text-base">
+            An administrator must verify your professional credentials before
+            you can create slots, manage screening appointments, or publish
+            reports.
+          </p>
+          {dashboard?.approvalReason && (
+            <p className="mt-4 rounded-xl border border-amber-200 bg-white/60 p-4 text-sm font-semibold text-amber-900">
+              Review note: {dashboard.approvalReason}
+            </p>
+          )}
+        </section>
+      </div>
+    );
+  }
+
+  return (
   <div className="space-y-8">
     <section className="relative overflow-hidden rounded-3xl bg-slate-950 px-6 py-8 text-white shadow-xl shadow-slate-900/10 sm:px-8 lg:px-10 lg:py-10">
       <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-cyan-500/20 blur-3xl" />
@@ -107,6 +135,7 @@ const DoctorDashboard = ({ dashboard, doctor }) => (
       </div>
     </section>
   </div>
-);
+  );
+};
 
 export default DoctorDashboard;

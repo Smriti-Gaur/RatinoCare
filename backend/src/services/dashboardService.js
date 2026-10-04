@@ -70,6 +70,33 @@ export const getAdminDashboardService = async () => {
 export const getDoctorDashboardService = async (
   doctorId
 ) => {
+  const doctor = await User.findOne({
+    _id: doctorId,
+    role: "doctor",
+  }).select("isApproved approvalStatus approvalReason");
+
+  if (!doctor) {
+    return {
+      isApproved: false,
+      approvalStatus: doctor.approvalStatus,
+      approvalReason: doctor.approvalReason,
+      doctorUnavailable: true,
+    };
+  }
+
+  if (!doctor.isApproved) {
+    return {
+      isApproved: false,
+      todayAppointments: 0,
+      pendingAppointments: 0,
+      confirmedAppointments: 0,
+      completedAppointments: 0,
+      cancelledAppointments: 0,
+      availableSlots: 0,
+      bookedSlots: 0,
+      reportsCreated: 0,
+    };
+  }
 
   const today = new Date();
 
@@ -137,6 +164,9 @@ export const getDoctorDashboardService = async (
   ]);
 
   return {
+    isApproved: true,
+    approvalStatus: doctor.approvalStatus,
+    approvalReason: doctor.approvalReason,
     todayAppointments,
     pendingAppointments,
     confirmedAppointments,

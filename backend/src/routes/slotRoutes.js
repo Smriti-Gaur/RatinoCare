@@ -13,6 +13,7 @@ import {
 } from "../validators/slotValidator.js";
 import protect from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
+import requireApprovedDoctor from "../middleware/doctorApprovalMiddleware.js";
 
 const router = express.Router();
 
@@ -20,11 +21,18 @@ router.post(
   "/create",
   protect,
   authorize("doctor"),
+  requireApprovedDoctor,
   validateCreateSlot,
   createSlot
 );
 
-router.get("/my-slots", protect, authorize("doctor"), getMySlots);
+router.get(
+  "/my-slots",
+  protect,
+  authorize("doctor"),
+  requireApprovedDoctor,
+  getMySlots
+);
 
 router.get(
   "/doctor/:doctorId",
@@ -44,6 +52,7 @@ router.delete(
   "/:slotId",
   protect,
   authorize("doctor","admin"),
+  requireApprovedDoctor,
   validateSlotId,
   deleteSlot
 );

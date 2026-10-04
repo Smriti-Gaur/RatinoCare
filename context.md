@@ -1681,3 +1681,53 @@ When helping with RatinoCare:
 > appointments and related healthcare workflows, with an additional
 > AI-assisted feature for understanding medical reports, explaining
 > results, tracking changes over time, and supporting doctor review.**
+
+------------------------------------------------------------------------
+
+# 42. Implementation Update: Doctor Approval Enforcement
+
+Doctor-only clinical routes now use the shared
+`backend/src/middleware/doctorApprovalMiddleware.js` middleware. The
+middleware reads the current doctor record from MongoDB and requires
+`isApproved: true` before allowing slot management, doctor appointment
+operations, and doctor report access.
+
+The doctor dashboard remains available as a read-only verification-status
+screen for authenticated unapproved doctors. It returns
+`isApproved: false` with zero operational counters, and the frontend
+renders a pending-approval message instead of active clinical shortcuts.
+
+------------------------------------------------------------------------
+
+# 53. Implementation Update: Doctor Verification Workflow
+
+Doctor verification is now available through admin-only doctor endpoints:
+
+- `GET /api/doctors/pending`
+- `PATCH /api/doctors/:doctorId/approve`
+- `PATCH /api/doctors/:doctorId/reject`
+
+Doctor records now retain `approvalStatus`, `approvalReason`,
+`reviewedBy`, and `reviewedAt` while preserving the existing
+`isApproved` flag used by clinical authorization. The admin dashboard has
+a pending-review queue showing doctor identity, claimed license,
+specialization, status, and submission date. Admins can approve a doctor
+or reject the application with a required reason.
+
+An approved doctor receives `isApproved: true` and can use clinical
+features. A rejected doctor remains unable to use clinical features and
+can see the review note on the doctor dashboard. File/document upload is
+not included yet because the current registration flow has no secure
+object-storage upload mechanism; the queue clearly identifies the
+license and registration information currently available for review.
+
+------------------------------------------------------------------------
+
+# 54. Implementation Update: Shared Server CORS Configuration
+
+The production entry point now imports the shared Express application
+from `backend/src/app.js` instead of maintaining a second copy of route
+and CORS configuration. This ensures browser preflight requests for the
+admin `PATCH /api/doctors/:doctorId/approve` and
+`PATCH /api/doctors/:doctorId/reject` endpoints advertise and allow the
+PATCH method consistently.

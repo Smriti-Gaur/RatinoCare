@@ -10,7 +10,7 @@ const connectDB = async () => {
     await backfillPublicIds();
 
     logger.info("MongoDB Connected");
-
+    return true;
   } catch (error) {
 
     console.error(
@@ -19,7 +19,7 @@ const connectDB = async () => {
     );
 
     process.exit(1);
-
+    return false;
   }
 };
 

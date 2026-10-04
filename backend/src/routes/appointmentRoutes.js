@@ -26,6 +26,7 @@ import {verifyPatientOwnership , verifyDoctorOwnership }from "../middleware/owne
 
 import protect from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
+import requireApprovedDoctor from "../middleware/doctorApprovalMiddleware.js";
 
 const router = express.Router();
 
@@ -54,7 +55,8 @@ router.get(
   "/my-appointments",
   protect,
     authorize("patient", "doctor", "admin"),
-  getMyAppointments
+    requireApprovedDoctor,
+    getMyAppointments
 );
 
 router.get(
@@ -70,6 +72,7 @@ router.get(
     "/doctor/:doctorId",
     protect,
     authorize("doctor","admin"),
+    requireApprovedDoctor,
     validateDoctorId,
     verifyDoctorOwnership,
     getDoctorAppointments
@@ -80,6 +83,7 @@ router.get(
 router.get(
     "/:id",
     protect,
+    requireApprovedDoctor,
     validateAppointmentId,
     getAppointmentById
 );
@@ -87,6 +91,7 @@ router.patch(
     "/:id/status",
     protect,
     authorize("doctor"),
+    requireApprovedDoctor,
     validateAppointmentId,
     validateStatusUpdate,
     updateAppointmentStatus
@@ -96,9 +101,9 @@ router.patch(
     "/:id/cancel",
     protect,
     authorize("doctor"),
+    requireApprovedDoctor,
     validateAppointmentId,
     cancelAppointment
 );
 
 export default router;
-

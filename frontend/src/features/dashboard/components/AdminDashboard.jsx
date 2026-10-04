@@ -17,6 +17,9 @@ import { Link } from "react-router-dom";
 import {
   createDoctorLicense,
   disableDoctorLicense,
+  fetchPendingDoctors,
+  approveDoctor,
+  rejectDoctor,
   fetchDoctorLicenses,
 } from "../services/doctorLicenseService";
 
@@ -48,6 +51,10 @@ const AdminDashboard = ({ dashboard }) => {
   const [licenseActionId, setLicenseActionId] = useState(null);
   const [licenseError, setLicenseError] = useState(null);
   const [licenseSuccess, setLicenseSuccess] = useState(null);
+  const [pendingDoctors, setPendingDoctors] = useState([]);
+  const [doctorLoading, setDoctorLoading] = useState(true);
+  const [doctorActionId, setDoctorActionId] = useState(null);
+  const [doctorError, setDoctorError] = useState(null);
 
   const loadLicenses = async () => {
     setLicenseLoading(true);
@@ -70,6 +77,59 @@ const AdminDashboard = ({ dashboard }) => {
 
     return () => window.clearTimeout(requestId);
   }, []);
+
+  const loadPendingDoctors = async () => {
+    setDoctorLoading(true);
+    setDoctorError(null);
+
+    try {
+      const data = await fetchPendingDoctors();
+      setPendingDoctors(data.doctors || []);
+    } catch (requestError) {
+      setDoctorError(requestError.message);
+    } finally {
+      setDoctorLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const requestId = window.setTimeout(() => {
+      loadPendingDoctors();
+    }, 0);
+
+    return () => window.clearTimeout(requestId);
+  }, []);
+
+  const handleApproveDoctor = async (doctorId) => {
+    setDoctorActionId(doctorId);
+    setDoctorError(null);
+
+    try {
+      await approveDoctor(doctorId);
+      await loadPendingDoctors();
+    } catch (requestError) {
+      setDoctorError(requestError.message);
+    } finally {
+      setDoctorActionId(null);
+    }
+  };
+
+  const handleRejectDoctor = async (doctorId) => {
+    const reason = window.prompt("Why is this doctor being rejected?");
+    if (!reason?.trim()) return;
+
+    setDoctorActionId(doctorId);
+    setDoctorError(null);
+
+    try {
+      await rejectDoctor(doctorId, reason.trim());
+      await loadPendingDoctors();
+    } catch (requestError) {
+      setDoctorError(requestError.message);
+    } finally {
+      setDoctorActionId(null);
+    }
+  };
 
   const handleLicenseSubmit = async (event) => {
     event.preventDefault();
@@ -148,6 +208,38 @@ const AdminDashboard = ({ dashboard }) => {
 
       <div className="mt-7 overflow-x-auto rounded-xl border border-slate-200">
         {licenseLoading ? <div className="p-6 text-sm text-slate-500">Loading verified licenses...</div> : licenses.length === 0 ? <div className="p-6 text-sm text-slate-500">No verified licenses have been added yet.</div> : <table className="w-full min-w-[680px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">License</th><th className="px-4 py-3">Specialization</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Claimed doctor</th><th className="px-4 py-3">Action</th></tr></thead><tbody className="divide-y divide-slate-100">{licenses.map((license) => <tr key={license._id}><td className="px-4 py-3 font-semibold text-slate-900">{license.licenseNumber}</td><td className="px-4 py-3 text-slate-600">{license.specialization}</td><td className="px-4 py-3"><span className={`rounded-full border px-2.5 py-1 text-xs font-bold capitalize ${licenseStatusStyles[license.status]}`}>{license.status}</span></td><td className="px-4 py-3 text-slate-600">{license.claimedBy?.name || "Not claimed"}</td><td className="px-4 py-3">{license.status === "available" ? <button type="button" onClick={() => handleDisableLicense(license._id)} disabled={licenseActionId === license._id} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"><ShieldOff size={14} /> {licenseActionId === license._id ? "Disabling..." : "Disable"}</button> : <span className="text-xs text-slate-400">No action</span>}</td></tr>)}</tbody></table>}
+      </div>
+    </section>
+
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-900/5 sm:p-7">
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><Stethoscope size={20} /></div>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-600">Review queue</p>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950">Pending doctor approvals</h2>
+          <p className="mt-1 text-sm text-slate-500">Review the doctor identity, claimed license, and specialization before enabling clinical access.</p>
+        </div>
+      </div>
+
+      {doctorError && <div className="mt-5 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-800"><AlertCircle size={17} /> {doctorError}</div>}
+      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
+        {doctorLoading ? <div className="p-6 text-sm text-slate-500">Loading doctor applications...</div> : pendingDoctors.length === 0 ? <div className="p-6 text-sm text-slate-500">No doctor applications are waiting for review.</div> : (
+          <table className="w-full min-w-[900px] text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Doctor</th><th className="px-4 py-3">License</th><th className="px-4 py-3">Specialization</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Submitted</th><th className="px-4 py-3">Action</th></tr></thead>
+            <tbody className="divide-y divide-slate-100">
+              {pendingDoctors.map((doctor) => (
+                <tr key={doctor._id}>
+                  <td className="px-4 py-3"><p className="font-semibold text-slate-900">{doctor.name}</p><p className="text-xs text-slate-500">{doctor.email} · {doctor.publicId}</p></td>
+                  <td className="px-4 py-3 font-semibold text-slate-700">{doctor.medicalLicenseNumber || "Not listed"}</td>
+                  <td className="px-4 py-3 text-slate-600">{doctor.specialization || "Not listed"}</td>
+                  <td className="px-4 py-3"><span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold capitalize text-amber-700">{doctor.approvalStatus || "pending"}</span>{doctor.approvalReason && <p className="mt-2 max-w-xs text-xs text-slate-500">{doctor.approvalReason}</p>}</td>
+                  <td className="px-4 py-3 text-slate-600">{new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(doctor.createdAt))}</td>
+                  <td className="px-4 py-3"><div className="flex gap-2"><button type="button" onClick={() => handleApproveDoctor(doctor._id)} disabled={doctorActionId === doctor._id} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-60">{doctorActionId === doctor._id ? "Saving..." : "Approve"}</button><button type="button" onClick={() => handleRejectDoctor(doctor._id)} disabled={doctorActionId === doctor._id} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-60">Reject</button></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </section>
 

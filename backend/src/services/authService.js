@@ -87,6 +87,7 @@ export const registerUserService = async (userData) => {
         medicalLicenseNumber: claimedLicense.licenseNumber,
         specialization: specialization.trim(),
         isApproved,
+        approvalStatus: "pending",
       });
 
       await Doctor.create({
@@ -104,6 +105,7 @@ export const registerUserService = async (userData) => {
         medicalLicenseNumber: "",
         specialization: "",
         isApproved,
+        approvalStatus: "approved",
       });
     }
   } catch (error) {
